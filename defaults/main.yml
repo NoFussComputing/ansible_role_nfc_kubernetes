@@ -1,0 +1,125 @@
+KubernetesPodSubnet: 10.85.0.0/16
+KubernetesServiceSubnet: 10.86.0.0/16
+
+
+Kubernetes_Prime: false                                    # Optional, Boolean. Is the current host the Prime master?
+Kubernetes_Master: false                                   # Optional, Boolean. Is the current host a master host?
+
+ContainerDioVersion: 1.6.20-1
+KubernetesVersion: '1.26.2'                                # must match the repository release version
+
+KubernetesVersion_k8s_prefix: '-00'
+KubernetesVersion_k3s_prefix: '+k3s1'
+
+kubernetes_private_container_registry: []                  # Optional, Array. if none use `[]`
+
+# host_external_ip: ''                                     # Optional, String. External IP Address for host.
+
+# Optional, Dict. Used to configure Kubernetes with OIDC Authentication.
+# kubernetes_oidc:
+#   enabled: true                                          # Mandatory, boolen. speaks for itself.
+#   issuer_url: https://domainname.com/realms/realm-name   # Mandatory, String. URL of OIDC Provider
+#   client_id: kubernetes-test                             # Mandatory, string. OIDC Client ID
+#   username_claim: preferred_username                     # Mandatory, String. Claim name containing username.
+#   username_prefix: oidc                                  # Optional, String. What to prefix to username
+#   groups_claim: roles                                    # Mandatory, String. Claim name containing groups
+#   groups_prefix: ''                                      # Optional, String. string to append to groups
+
+kubernetes_type: k8s                                       # Mandatory, String. choice K8s | k3s
+
+
+nfc_kubernetes:
+  enable_firewall: true             # Optional, bool enable firewall rules from role 'nfc_firewall'
+
+
+k3s:
+  files:
+    # - name: config.yaml
+    #   path: /etc/rancher/k3s
+    #   content: |
+    #     flannel-backend: none
+    #     cluster-cidr: "{{ KubernetesPodSubnet }}"
+    #     cluster-init: true
+    #     {% if not Kubernetes_Prime | default(false) | bool -%}server: https://{{ hostvars[kubernetes_config.cluster.prime.name].ansible_host }}:6443{% endif %}
+    #     service-cidr: "{{ KubernetesServiceSubnet }}"
+    #     disable-network-policy: true
+    #     disable:
+    #       - traefik
+    #     kube-apiserver-arg:
+    #       - audit-log-path=/var/lib/rancher/k3s/server/logs/audit.log
+    #       - audit-policy-file=/var/lib/rancher/k3s/server/audit.yaml
+    #       # - admission-control-config-file=/var/lib/rancher/k3s/server/psa.yaml
+    #       {% if kubernetes_oidc.enabled | default(false) | bool -%}
+    #       - oidc-issuer-url={{ kubernetes_oidc.issuer_url }}
+    #       - oidc-client-id={{ kubernetes_oidc.client_id }}
+    #       - oidc-username-claim={{ kubernetes_oidc.username_claim }}
+    #       - {% if kubernetes_oidc.oidc_username_prefix | default('') != '' %}oidc-username-prefix={{ kubernetes_oidc.oidc_username_prefix }}{% endif %}
+    #       - oidc-groups-claim={{ kubernetes_oidc.groups_claim }}
+    #       {% if kubernetes_oidc.groups_prefix | default('') != '' %}- oidc-groups-prefix={{ kubernetes_oidc.groups_prefix }}{% endif %}
+    #     {% endif %}
+    #     node-external-ip: "{{ host_external_ip }}"
+
+    - name: audit.yaml
+      path: /var/lib/rancher/k3s/server
+      content: |
+        apiVersion: audit.k8s.io/v1
+        kind: Policy
+        rules:
+        - level: Request
+
+    - name: 90-kubelet.conf
+      path: /etc/sysctl.d
+      content: |
+        vm.panic_on_oom=0
+        vm.overcommit_memory=1
+        kernel.panic=10
+        kernel.panic_on_oops=1
+        kernel.keys.root_maxbytes=25000000
+
+    - name: psa.yaml
+      path: /var/lib/rancher/k3s/server
+      content: ""
+        # apiVersion: apiserver.config.k8s.io/v1
+        # kind: AdmissionConfiguration
+        # plugins:
+        # - name: PodSecurity
+        #   configuration:
+        #     apiVersion: pod-security.admission.config.k8s.io/v1beta1
+        #     kind: PodSecurityConfiguration
+        #     defaults:
+        #       enforce: "restricted"
+        #       enforce-version: "latest"
+        #       audit: "restricted"
+        #       audit-version: "latest"
+        #       warn: "restricted"
+        #       warn-version: "latest"
+        #     exemptions:
+        #       usernames: []
+        #       runtimeClasses: []
+        #       namespaces: [kube-system]
+
+
+
+#############################################################################################
+# Cluster Config when stored in Inventory
+#
+# One required per cluster. recommend creating one ansible host group per cluster.
+#############################################################################################
+# kubernetes_config:                    # Dict. Cluster Config
+#   cluster:
+#     access:                           # Mandatory. List, DNS host name or IPv4/IPv6 Address. 
+#                                       # if none use '[]'
+#       - 'my.dnshostname.com'
+#       - '2001:4860:4860::8888'
+#       - '192.168.1.1'
+#     Name: earth                       # Mandatory, String. Cluster Name
+#     prime:
+#       name: k3s-prod                  # Mandatory, String. Ansible inventory_host that will
+#                                       # act as the prime master node.
+#     networking:
+#       podSubnet: 172.16.70.0/24       # Mandatory, String. CIDR
+#       ServiceSubnet: 172.16.72.0/24   # Mandatory, String. CIDR
+#                                       # Mandatory, String. Token to join nodes to the cluster
+#   node_token: !vault |
+#     $ANSIBLE_VAULT;1.2;AES256;kubernetes/cluster/production
+#     {rest_of encrypted key}

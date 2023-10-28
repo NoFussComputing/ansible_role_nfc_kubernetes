@@ -1,0 +1,21 @@
+---
+- name: "restart ContainerD"
+  service:
+    name: containerd
+    state: restarted
+  when: >
+    containerd_config.changed | default(false) | bool
+      and
+    containerd_installed.rc | default(1) | int == 0
+      and
+    kubernetes_type == 'k8s'
+  tags:
+    - configure
+    - install
+
+
+- name: Restart Kubernetes
+  ansible.builtin.service:
+    name: "{% if kubernetes_type == 'k3s' %}k3s{% else %}kubelet{% endif %}"
+    state: restarted
+  listen: kubernetes_restart

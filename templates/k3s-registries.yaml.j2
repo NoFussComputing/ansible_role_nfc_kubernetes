@@ -1,0 +1,19 @@
+#
+# Private Container Registries for Kubernetes
+#
+# Managed By ansible/role/nfc_kubernetes
+#
+# Dont edit this file directly as it will be overwritten.
+#
+
+{% set registries = kubernetes_private_container_registry | default([]) -%}
+
+{% if registries | length > 0 %}mirrors:
+  {% for entry in registries %}
+
+  {{ entry.name }}:
+    endpoint:
+      - "{{ entry.url }}"
+
+  {%- endfor %}
+{% endif %}

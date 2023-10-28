@@ -1,0 +1,29 @@
+#
+# K3s Configuration for running Kubernetes
+#
+# Managed By ansible/role/nfc_kubernetes
+#
+# Dont edit this file directly as it will be overwritten.
+#
+
+flannel-backend: none
+cluster-cidr: "{{ KubernetesPodSubnet }}"
+cluster-init: true
+{% if not Kubernetes_Prime | default(false) | bool -%}server: https://{{ hostvars[kubernetes_config.cluster.prime.name].ansible_host }}:6443{% endif %}
+service-cidr: "{{ KubernetesServiceSubnet }}"
+disable-network-policy: true
+disable:
+  - traefik
+kube-apiserver-arg:
+  - audit-log-path=/var/lib/rancher/k3s/server/logs/audit.log
+  - audit-policy-file=/var/lib/rancher/k3s/server/audit.yaml
+  # - admission-control-config-file=/var/lib/rancher/k3s/server/psa.yaml
+  {% if kubernetes_oidc.enabled | default(false) | bool -%}
+  - oidc-issuer-url={{ kubernetes_oidc.issuer_url }}
+  - oidc-client-id={{ kubernetes_oidc.client_id }}
+  - oidc-username-claim={{ kubernetes_oidc.username_claim }}
+{% if kubernetes_oidc.oidc_username_prefix | default('') != '' -%}  - oidc-username-prefix={{ kubernetes_oidc.oidc_username_prefix }}{% endif %}
+  - oidc-groups-claim={{ kubernetes_oidc.groups_claim }}
+{% if kubernetes_oidc.groups_prefix | default('') != '' %}  - oidc-groups-prefix={{ kubernetes_oidc.groups_prefix }}{% endif %}
+{% endif %}
+{% if host_external_ip | default('') %} node-external-ip: "{{ host_external_ip }}"{% endif %}

@@ -1,0 +1,240 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations:
+    authorization/description: >-
+      provide full access to everything.
+
+      Using this Cluster role should be avoided with additional cluster roles
+      created to meet the additional authorization requirements.
+    authorization/target: cluster, namespace
+  labels:
+    app.kubernetes.io/part-of: nfc_kubernetes
+    app.kubernetes.io/managed-by: ansible
+    app.kubernetes.io/version: ''
+  name: authorization:common:full
+rules:
+- apiGroups:
+    - "*"
+  resources:
+    - "*"
+  verbs:
+    - "*"
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations:
+    authorization/description: |-
+      Provide Access for reading ALL non-secret items, this includes reading pod and node metrics.
+
+      This role is designed for users who require access to audit/view/diagnose at either the 
+      cluster level `ClusterRoleBinding` or namespace level `RoleBinding`
+    authorization/target: namespace
+  labels:
+    app.kubernetes.io/part-of: nfc_kubernetes
+    app.kubernetes.io/managed-by: ansible
+    app.kubernetes.io/version: ''
+  name: authorization:common:namespace:read
+rules:
+  - apiGroups: # Get Metrics
+      - metrics.k8s.io
+    resources:
+      - pods
+      - nodes
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups: # Read-only access to resrouces
+      - "*"
+    resources:
+      - awx
+      - cronjobs
+      - daemonset
+      - deployments
+      - helmcharts
+      - helmchartconfigs
+      - ingress
+      - jobs
+      - namespaces
+      - pods
+      - pv
+      - pvc
+      - serviceaccount
+      - services
+      - statefuleset
+      - storageclasses
+      - configmap
+    verbs:
+      - get
+      - list
+      - watch
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations:
+    authorization/description: |-
+      Provide access for reading ALL items.
+
+      This role is designed for users who own and is designed to be 
+      bound to a namespace using a `RoleBinding`
+    authorization/target: namespace
+  labels:
+    app.kubernetes.io/part-of: nfc_kubernetes
+    app.kubernetes.io/managed-by: ansible
+    app.kubernetes.io/version: ''
+  name: authorization:common:namespace:owner
+rules:
+  - apiGroups: # Read-only access to resrouces
+      - "*"
+    resources:
+      - awx
+      - cronjobs
+      - daemonset
+      - deployments
+      - helmcharts
+      - helmchartconfigs
+      - ingress
+      - jobs
+      - pods
+      - pvc
+      - roles
+      - rolebindings
+      - secrets
+      - serviceaccount
+      - services
+      - statefuleset
+      - storageclasses
+      - configmap
+    verbs:
+      - create
+      - get
+      - list
+      - watch
+      - delete
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: authorization:common:cluster:view-metrics
+rules:
+- apiGroups:
+    - metrics.k8s.io
+    - ""              # Without this metrics don't work. this also grants access to view nodes
+  resources:
+    - pods
+    - nodes
+  verbs:
+    - get
+    - list
+    - watch
+
+
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: authorization:read
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: authorization:common:namespace:read
+subjects:
+- kind: Group
+  name: administrators
+- kind: Group
+  name: technician
+
+- kind: Group
+  name: NodeRED
+
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: authorization:view-metrics
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: authorization:common:cluster:view-metrics
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: administrators
+  - kind: Group
+    name: technician
+
+
+# ---
+# kind: ClusterRoleBinding
+# apiVersion: rbac.authorization.k8s.io/v1
+# metadata:
+#   name: authorization:full
+# roleRef:
+#   apiGroup: rbac.authorization.k8s.io
+#   kind: ClusterRole
+#   name: authorization:full
+# subjects:
+# - kind: Group
+#   name: administrators
+# - kind: Group
+#   name: technician
+
+
+###################################################################################################################
+# Namespace role binding
+
+
+# ---
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: RoleBinding
+# metadata:
+#   # labels:
+
+#   name: authorization:full
+#   namespace: development
+# roleRef:
+#   apiGroup: rbac.authorization.k8s.io
+#   kind: Role
+#   name: authorization:full
+# subjects:
+# - kind: Group
+#   name: administrators
+#   namespace: development
+# - kind: Group
+#   name: technician
+
+# - kind: Group
+#   name: NodeRED
+
+
+# ---
+
+# - apiVersion: rbac.authorization.k8s.io/v1
+#   kind: Role
+#   metadata:
+#     labels:
+#       app.kubernetes.io/description: |-
+#         provide full access to the testing namespace
+#     name: authorization:full
+#     namespace: development
+#   rules:
+#   - apiGroups:
+#       - ""
+#     resources:
+#       - ""
+#     verbs:
+#       - add
+#       - delete
+#       - edit
+#       - get
+#       - list
+#       - watch
+
