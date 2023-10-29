@@ -117,6 +117,7 @@ k3s:
 #       name: k3s-prod                  # Mandatory, String. Ansible inventory_host that will
 #                                       # act as the prime master node.
 #     networking:
+#       encrypt: true                   # Optional, Boolean. default `false`. Install wireguard for inter-node encryption
 #       podSubnet: 172.16.70.0/24       # Mandatory, String. CIDR
 #       ServiceSubnet: 172.16.72.0/24   # Mandatory, String. CIDR
 #                                       # Mandatory, String. Token to join nodes to the cluster

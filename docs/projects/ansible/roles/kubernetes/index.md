@@ -1,19 +1,59 @@
 ---
-title: Kubernetes Ansible Role
+title: Kubernetes
 description: No Fuss Computings Ansible role nfc_kubernetes
 date: 2023-10-24
 template: project.html
 about: https://gitlab.com/nofusscomputing/projects/ansible/roles/kubernetes
 ---
 
+This Ansible roles purpose is to install and configure Kubernetes with configuration from code. You can also use [our playbooks](../../playbooks/index.md) to deploy using this role. this is especially useful if you are also using [our Ansible Execution Environment](../../execution_environment/index.md) 
 
 
-Expected inventory setup:
+## Features
 
-- each host has a host_vars file with `ansible_host` defined. _can be either DNS name, IPv4/IPv6 Address_
-- `k3s` host group with all hosts part of this group
-- `kubernetes_master` host group with all master nodes part of
+This role deploys a K3s cluster. In addition it has the following features:
 
-- variable `Kubernetes_Master` _boolean_ set for all host that are master nodes.
+- CNI Setup
 
-- hosts that require Kubernetes API access added to variable `kubernetes_config.cluster.access`
+- Configurable Container Registries
+
+- _[ToDo-#3](https://gitlab.com/nofusscomputing/projects/ansible/kubernetes/-/issues/3)_ Encryption between nodes (Wireguard)
+
+- [Firewall configured for kubernetes host](firewall.md)
+
+- _[ToDo-#2](https://gitlab.com/nofusscomputing/projects/ansible/kubernetes/-/issues/2)_ Multi-node Deployment
+
+- OpenID Connect SSO Authentication
+
+- [Basic RBAC `ClusterRoles` and Bindings](rbac.md)
+
+- _[ToDo-#5](https://gitlab.com/nofusscomputing/projects/ansible/kubernetes/-/issues/5)_ Restore backup on fresh install of a cluster
+
+
+## Role Workflow
+
+The roles workflow is as follows
+
+1. Download both install script and k3s binary to ansible controller
+
+1. copy install script and k3s binary to host
+
+1. Create required config files needed for installation
+
+1. _(kubernetes prime only)_ Add install required config files
+
+1. Install kubernetes
+
+1. Configure Kubernetes
+
+If the playbook is setup as per [our recommendation](ansible.md) step 2 onwards is first done on master nodes then worker nodes.
+
+
+## Default Variables
+
+
+``` yaml title="defaults/main.yaml" linenums="1"
+
+--8<-- "defaults/main.yaml"
+
+```

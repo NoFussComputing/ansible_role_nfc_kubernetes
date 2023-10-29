@@ -185,13 +185,6 @@
     - containerRegistry
 
 
-- name: Restart ContainerD if required
-  meta: flush_handlers
-  tags:
-    - install
-    - containerRegistry
-
-
 - name: Install required python modules
   ansible.builtin.pip:
     name: kubernetes
@@ -289,14 +282,6 @@
   when: 
     - ansible_os_family == 'Debian'
     - iptables_installed.rc == 0
-  tags:
-    - install
-    - iptables
-    - firewall
-
-
-- name: Apply new firewall rules, if required
-  meta: flush_handlers
   tags:
     - install
     - iptables

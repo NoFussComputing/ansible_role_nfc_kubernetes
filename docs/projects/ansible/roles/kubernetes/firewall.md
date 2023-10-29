@@ -1,5 +1,5 @@
 ---
-title: Firewall - nfc_kubernetes
+title: Firewall
 description: No Fuss Computings Ansible role nfc_kubernetes
 date: 2023-10-24
 template: project.html

@@ -1,241 +1,32 @@
 ---
-- name: Install Software
-  ansible.builtin.include_role:
-    name: nfc_common
-  vars:
-    common_gather_facts: false
-    aptInstall:
-      - name: curl
-      - name: iptables
+# kubernetes_installed
+
+- name: K3s Install
+  ansible.builtin.include_tasks:
+    file: k3s/install.yaml
+  when: >
+    install_kubernetes | default(true) | bool
+      and
+    not kubernetes_installed | default(false) | bool
 
 
-- name: Create Required directories
-  ansible.builtin.file:
-    name: "{{ item.name }}"
-    state: "{{ item.state }}"
-    mode: "{{ item.mode }}"
-  loop: "{{ dirs }}"
-  vars:
-    dirs:
-      - name: /etc/rancher/k3s
-        state: directory
-        mode: 700
-      - name: /var/lib/rancher/k3s/server/logs
-        state: directory
-        mode: 700
-      - name: /var/lib/rancher/k3s/server/manifests
-        state: directory
-        mode: 700
+- name: K3s Configure
+  ansible.builtin.include_tasks:
+    file: k3s/configure.yaml
+  when: >
+    install_kubernetes | default(true) | bool
+      and
+    kubernetes_installed | default(false) | bool
 
 
-# - name: Local Container Registry
-#   ansible.builtin.copy:
-#     content: |
-#       #
-#       # Private Container Registries for Kubernetes
-#       #
-#       # Managed By ansible/role/nfc_kubernetes
-#       #
-#       # Dont edit this file directly as it will be overwritten.
-#       #
-
-#       {% set registries = kubernetes_private_container_registry | default([]) -%}
-
-#       {% if registries | length > 0 %}mirrors:
-#         {% for entry in registries %}
-
-#         {{ entry.name }}:
-#           endpoint:
-#             - "{{ entry.url }}"
-
-#         {%- endfor %}
-#       {% endif %}
-#     dest: /etc/rancher/k3s/registries.yaml
-#     owner: root
-#     mode: '700'
-#   # notify: "restart ContainerD"
-#   # with_items: "{{ containerd.repositories }}"
-#   # when:
-#   #   ansible_os_family == 'Debian'
-#   #    and
-#   #  Kubernetes_private_container_registry | default([]) | length > 0
-
-
-- name: Add sysctl net.ipv4.ip_forward
-  sysctl:
-    name: net.ipv4.ip_forward
-    value: '1'
-    sysctl_set: true
-    state: present
-    reload: true
-  notify: reboot_host
-  when:
-    - ansible_os_family == 'Debian'
-   # On change reboot
-
-
-- name: Check if K3s Installed
-  ansible.builtin.shell:
-    cmd: |
-      if [[ $(service k3s status) ]]; then exit 0; else exit 1; fi
-    executable: /bin/bash
-  changed_when: false
-  failed_when: false
-  register: k3s_installed
-
-
-# - name: Download K3s Binary
-#   ansible.builtin.uri:
-#     url: "{{ item.url }}"
-#     method: GET
-#     return_content: true
-#     # body: ""
-#     status_code:
-#       - 200
-#       - 304
-#     # headers:
-#     #   App-Token: "{{ glpi.app_token }}"
-#     #   Authorization: "user_token {{ glpi.user_token }}"
-#     #body_format: json
-#     # validate_certs: false
-#     dest: "{{ item.dest }}"
-#     mode: "744"
-#   register: k3s_download_files
-#   delegate_to: localhost
-#   # no_log: true
-#   when: ansible_os_family == 'Debian'
-#   loop: "{{ download_files }}"
-#   vars:
-#     ansible_connection: local
-#     download_files:
-#       - dest: /tmp/install.sh
-#         url: https://get.k3s.io
-#       - dest: "/tmp/k3s"
-#         url: "https://github.com/k3s-io/k3s/releases/download/v{{ KubernetesVersion + KubernetesVersion_k3s_prefix | urlencode }}/k3s"
-
-
-# - name: "[TRACE] Downloaded File SHA256"
-#   ansible.builtin.set_fact:
-#     hash_sha256_k3s_downloaded_binary: "{{ lookup('ansible.builtin.file', '/tmp/k3s') | hash('sha256') | string }}"
-#   delegate_to: localhost
-
-
-# - name: Existing k3s File hash
-#   ansible.builtin.stat:
-#     checksum_algorithm: sha256
-#     name: /usr/local/bin/k3s
-#   register: hash_sha256_k3s_existing_binary
-
-
-# - name: Copy K3s binary to Host
-#   ansible.builtin.copy:
-#     src: "/tmp/k3s"
-#     dest: "/usr/local/bin/k3s"
-#     mode: '740'
-#     owner: root
-#     group: root
-#   when: hash_sha256_k3s_existing_binary.stat.checksum | default('0') != hash_sha256_k3s_downloaded_binary
-
-# - name: Copy install script to Host
-#   ansible.builtin.copy:
-#     src: "/tmp/install.sh"
-#     dest: "/tmp/install.sh"
-#     mode: '755'
-#     owner: root
-#     group: root
-#   # when: hash_sha256_k3s_existing_binary.stat.checksum | default('0') != hash_sha256_k3s_downloaded_binary
-
-- name: Additional config files
-  ansible.builtin.copy:
-    content: |
-      {{  item.content }}
-    dest: "{{  item.path }}/{{  item.name }}"
-    mode: '740'
-    owner: root
-    group: root
-  loop: "{{ k3s.files }}"
-
-
-- name: Copy Templates
-  ansible.builtin.template:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
-    owner: root
-    mode: '700'
-    force: true
-  notify: "{{ item.notify | default(omit) }}"
-  loop: "{{ templates_to_apply }}"
-  vars:
-    templates_to_apply:
-      - src: "calico.yaml.j2"
-        dest: /var/lib/rancher/k3s/server/manifests/calico.yaml
-      - src: kubernetes-manifest-rbac.yaml.j2
-        dest: /var/lib/rancher/k3s/server/manifests/rbac-authorization-common.yaml
-      # - src: firewall-kubernetes.j2
-      #   dest: "/etc/network/if-up.d/firewall-kubernetes"
-
-      - src: iptables-kubernetes.rules.j2
-        dest: "/etc/iptables.rules.d/iptables-kubernetes.rules"
-        notify: firewall_reloader
-      - src: k3s-registries.yaml.j2
-        dest: /etc/rancher/k3s/registries.yaml
-        notify: kubernetes_restart
-      - src: k3s-config.yaml.j2
-        dest: /etc/rancher/k3s/config.yaml
-        notify: kubernetes_restart
-
-
-# - name: Templates IPv6
-#   ansible.builtin.template:
-#     src: iptables-kubernetes.rules.j2
-#     dest: "/etc/ip6tables.rules.d/ip6tables-kubernetes.rules"
-#     owner: root
-#     mode: '700'
-#     force: true
-#   vars:
-#     ipv6: true
-
-
-- name: Set IPTables to legacy mode
-  ansible.builtin.command:
-    cmd: update-alternatives --set iptables /usr/sbin/iptables-legacy
-  changed_when: false
-
-
-# - name: Server install K3s
-#   ansible.builtin.shell:
-#     cmd: |
-#       # INSTALL_K3S_SKIP_DOWNLOAD=true \
-#       # INSTALL_K3S_VERSION="v{{ KubernetesVersion }}{{ KubernetesVersion_k3s_prefix }}" \
-#       # /tmp/install.sh
-#       curl -sfL https://get.k3s.io | \
-#       INSTALL_K3S_VERSION="v1.26.9+k3s1" \
-#       sh -
-#   failed_when: false
-#   # when: >
-#   #   k3s_installed.rc | int == 1
-#   #     and
-#   #   Kubernetes_Master | default(false)
-#   when: Kubernetes_Master | default(false)
-
-# - name: Agent install K3s
-#   ansible.builtin.shell:
-#     cmd: |
-#       INSTALL_K3S_SKIP_DOWNLOAD=true \
-#       INSTALL_K3S_VERSION="v{{ KubernetesVersion }}{{ KubernetesVersion_k3s_prefix }}" \
-#       K3S_URL=https://{{ hostvars[kubernetes_config.cluster.prime.name].ansible_host }}:6443 \
-#       K3S_TOKEN={{ node_token }} \
-#       /tmp/install.sh
-#   when: >
-#     k3s_installed.rc | int == 1
-#       and
-#     not Kubernetes_Master | default(false)
-
-
-# # - name: Look up AAAA (IPv4) records for example.org
-# #   ansible.builtin.debug:
-# #     msg: "{{ query('community.dns.lookup', 'nww-au1.networkedweb.com.', type='A') }}"
-
-# # - name: Look up AAAA (IPv6) records for example.org
-# #   ansible.builtin.debug:
-# #     msg: "{{ query('community.dns.lookup', 'nww-au1.networkedweb.com.', type='AAAA') }}"
+- name: Wireguard Cluster Encryption
+  ansible.builtin.include_tasks:
+    file: k3s/wireguard.yaml
+  when: >
+    install_kubernetes | default(true) | bool
+      and
+    kubernetes_installed | default(false) | bool
+      and
+    not kubernetes_installed_encryption | default(false) | bool
+      and
+    kubernetes_config.cluster.networking.encrypt | default(false) | bool

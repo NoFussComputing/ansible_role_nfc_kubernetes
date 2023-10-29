@@ -19,13 +19,29 @@ nav:
 
   - Ansible:
 
+    - projects/ansible/index.md
+
+    - Execution Environment:
+
+      - projects/ansible/execution_environment/index.md
+
+    - Playbooks:
+
+      - projects/ansible/playbooks/index.md
+
     - Roles:
+
+      - projects/ansible/roles/index.md
 
       - Kubernetes:
 
         - projects/ansible/roles/kubernetes/index.md
 
+        - projects/ansible/roles/kubernetes/ansible.md
+
         - projects/ansible/roles/kubernetes/firewall.md
+
+        - projects/ansible/roles/kubernetes/rbac.md
 
 
 - Operations: 

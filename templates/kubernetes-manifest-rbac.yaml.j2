@@ -13,7 +13,7 @@ metadata:
     app.kubernetes.io/part-of: nfc_kubernetes
     app.kubernetes.io/managed-by: ansible
     app.kubernetes.io/version: ''
-  name: authorization:common:full
+  name: authorization:full
 rules:
 - apiGroups:
     - "*"
@@ -37,7 +37,7 @@ metadata:
     app.kubernetes.io/part-of: nfc_kubernetes
     app.kubernetes.io/managed-by: ansible
     app.kubernetes.io/version: ''
-  name: authorization:common:namespace:read
+  name: authorization:namespace:read
 rules:
   - apiGroups: # Get Metrics
       - metrics.k8s.io
@@ -88,7 +88,7 @@ metadata:
     app.kubernetes.io/part-of: nfc_kubernetes
     app.kubernetes.io/managed-by: ansible
     app.kubernetes.io/version: ''
-  name: authorization:common:namespace:owner
+  name: authorization:namespace:owner
 rules:
   - apiGroups: # Read-only access to resrouces
       - "*"
@@ -122,7 +122,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: authorization:common:cluster:view-metrics
+  name: authorization:cluster:view-metrics
 rules:
 - apiGroups:
     - metrics.k8s.io
@@ -144,7 +144,7 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: authorization:common:namespace:read
+  name: authorization:namespace:read
 subjects:
 - kind: Group
   name: administrators
@@ -163,7 +163,7 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: authorization:common:cluster:view-metrics
+  name: authorization:cluster:view-metrics
 subjects:
   - apiGroup: rbac.authorization.k8s.io
     kind: Group
