@@ -1,0 +1,263 @@
+#
+# IP Tables Firewall Rules for Kubernetes
+# 
+# Managed By ansible/role/nfc_kubernetes
+#
+# Dont edit this file directly as it will be overwritten. To grant a host API access
+# edit the cluster config, adding the hostname/ip to path kubernetes_config.cluster.access
+#
+# This file is periodicly called by cron
+#
+
+{% set data = namespace(firewall_rules=[]) -%}
+
+{%- if ansible_host is regex('^[a-z]') and ':' not in ansible_host -%} {#- Convert DNs name to IP Address -#}
+
+  {%- if ipv6 | default(false) -%}
+
+    {%- set ansible_host = query('community.dns.lookup', ansible_host + '.', type='AAAA' ) -%}
+
+  {%- else -%}
+
+    {%- set ansible_host = query('community.dns.lookup', ansible_host + '.', type='A' ) -%}
+
+  {%- endif -%}
+
+  {%- if ansible_host | list | length > 0 -%} {#- Convert dns lookup to list, and select the first item -#}
+    {%- set ansible_host = ansible_host | from_yaml_all | list -%}
+
+    {%- set ansible_host = ansible_host[0] -%}
+  {%- endif -%}
+
+{%- endif -%}
+
+{%- for kubernetes_host in groups[kubernetes_type] -%}
+
+
+    {%- if kubernetes_host is regex('^[a-z]') and ':' not in kubernetes_host -%} {#- Convert DNs name to IP Address -#}
+
+      {%- if ipv6 | default(false) -%}
+
+        {%- set kubernetes_host = query('community.dns.lookup', kubernetes_host + '.', type='AAAA' ) -%}
+
+      {%- else -%}
+
+        {%- set kubernetes_host = query('community.dns.lookup', kubernetes_host + '.', type='A' ) -%}
+
+      {%- endif -%}
+
+      {%- if kubernetes_host | list | length > 0 -%} {#- Convert dns lookup to list, and select the first item -#}
+        {%- set kubernetes_host = kubernetes_host | from_yaml_all | list -%}
+
+        {%- set kubernetes_host = kubernetes_host[0] -%} 
+      {%- endif -%}
+
+    {%- endif -%}
+
+
+    {%- for master_host in groups['kubernetes_master'] -%}
+
+
+      {%- if master_host is regex('^[a-z]')  and ':' not in master_host -%} {#- Convert DNs name to IP Address -#}
+
+        {%- if ipv6 | default(false) -%}
+
+          {%- set master_host = query('community.dns.lookup', master_host + '.', type='AAAA' ) -%}
+
+        {%- else -%}
+
+          {%- set master_host = query('community.dns.lookup', master_host + '.', type='A' ) -%}
+
+        {%- endif -%}
+ 
+        {%- if master_host | list | length > 0 -%} {#- Convert dns lookup to list, and select the first item -#}
+          {%- set master_host = master_host | from_yaml_all | list -%}
+
+          {%- set master_host = master_host[0] -%} 
+        {%- endif -%}
+
+      {%- endif -%}
+
+
+      {%- if Kubernetes_Master | default(false) | bool -%}
+
+          {%- if 
+              master_host == kubernetes_host
+              and
+              master_host != ansible_host
+                and
+              (
+                (
+                  ipv6 | default(false)
+                    and
+                  ':' in master_host
+                )
+                  or
+                (
+                  not ipv6 | default(false)
+                    and
+                  '.' in master_host
+                )
+              )
+          -%}
+
+              {#- master hosts only -#}
+
+              {%- set data.firewall_rules = data.firewall_rules + ['-I kubernetes-embedded-etcd -s ' + master_host + ' -j ACCEPT'] -%}
+              {# {%- set data.firewall_rules = data.firewall_rules + ['-I INPUT -s ' + master_host + ' -p tcp -m multiport --dports 2380 -j ACCEPT'] -%} #}
+              {%- set data.firewall_rules = data.firewall_rules + ['-I kubernetes-api -s ' + master_host + ' -j ACCEPT'] -%}
+
+          {%- endif -%}
+
+      {%- endif -%}
+
+    {%- endfor -%}
+
+    {%- if 
+      ansible_host != kubernetes_host
+        and
+      (
+        (
+          ipv6 | default(false)
+            and
+          ':' in kubernetes_host
+        )
+          or
+        (
+          not ipv6 | default(false)
+            and
+          '.' in kubernetes_host
+        )
+      )
+    -%}
+
+      {#- All cluster Hosts -#}
+
+      {%- set data.firewall_rules = data.firewall_rules + ['-I kubelet-metrics -s ' + kubernetes_host + ' -j ACCEPT'] -%}
+
+    {%- endif -%}
+
+{%- endfor -%}
+
+
+{%- for api_client in kubernetes_config.cluster.access | default([]) -%}
+
+  {%- if api_client is regex('^[a-z]')  and ':' not in api_client -%} {#- Convert DNs name to IP Address -#}
+
+    {%- set api_client_dns_name = api_client -%}
+
+    {%- if ipv6 | default(false) -%}
+
+      {%- set api_client = query('community.dns.lookup', api_client + '.', type='AAAA' ) -%}
+
+    {%- else -%}
+
+      {%- set api_client = query('community.dns.lookup', api_client + '.', type='A' ) -%}
+
+    {%- endif -%}
+
+    {%- if api_client | list | length > 0 -%} {#- Convert dns lookup to list, and select the first item -#}
+
+      {%- set api_client = api_client | from_yaml_all | list -%}
+
+      {%- set api_client = api_client[0] -%}
+
+    {%- endif -%}
+
+  {%- endif -%}
+
+
+  {%- if
+    api_client != ansible_host
+      and
+    (
+      (
+        ipv6 | default(false)
+          and
+        ':' in api_client
+      )
+        or
+      (
+        not ipv6 | default(false)
+          and
+        '.' in api_client
+      )
+    )
+  -%}
+
+    {#- Hosts allowed to access API -#}
+
+    {%- set data.firewall_rules = data.firewall_rules + ['-I kubernetes-api -s ' + api_client + ' -m comment --comment "host: ' + api_client_dns_name | default(api_client) + '" -j ACCEPT'] -%}
+
+  {%- endif -%}
+
+{%- endfor %}
+
+*filter
+
+{# -N kubernetes-embedded-etcd
+-A kubernetes-embedded-etcd -j RETURN
+
+-A INPUT -p tcp -m multiport --dports 2379,2380 -m comment --comment "etcd. Servers only" -j kubernetes-embedded-etcd
+
+
+-N kubernetes-api
+-A kubernetes-api -j RETURN
+
+-A INPUT -p tcp --dport 6443 -m comment --comment "Kubernetes API access. All Cluster hosts and end users" -j kubernetes-api
+
+
+-N kubernetes-flannel-vxlan
+-A kubernetes-flannel-vxlan -j RETURN
+
+-A INPUT -p udp --dport 8472 -m comment --comment "Flannel. All cluster hosts" -j kubernetes-flannel-vxlan
+
+
+-N kubernetes-kubelet-metrics
+-A kubernetes-kubelet-metrics -j RETURN
+
+-A INPUT -p tcp --dport 10250 -m comment --comment "Kubernetes Metrics. All cluster hosts" -j kubernetes-kubelet-metrics
+
+
+-N kubernetes-flannel-wg-four
+-A kubernetes-flannel-wg-four -j RETURN
+
+-A INPUT -p udp --dport 51820 -m comment --comment "Flannel Wiregaurd IPv4. All cluster hosts" -j kubernetes-flannel-wg-four
+
+
+-N kubernetes-flannel-wg-six
+-A kubernetes-flannel-wg-six -j RETURN
+
+-A INPUT -p udp --dport 51821 -m comment --comment "Flannel Wiregaurd IPv6. All cluster hosts" -j kubernetes-flannel-wg-six #}
+
+
+{% if data.firewall_rules | length | int > 0 -%}
+{% for rule in data.firewall_rules -%}
+{{ rule }}
+{% endfor -%}
+{% endif -%}
+
+{#- #-I INPUT -s 192.168.1.0/24 -p tcp -m multiport --dports 6443 -j ACCEPT
+#-I INPUT -s 192.168.1.0/24 -p tcp -m multiport --dports 179 -j ACCEPT
+#-I INPUT -s 192.168.1.0/24 -p tcp -m multiport --dports 10250 -j ACCEPT
+
+#-I INPUT -s 192.168.1.0/24 -p udp -m multiport --dports 4789 -j ACCEPT
+#-I INPUT -s 192.168.1.0/24 -p tcp -m multiport --dports 2379 -j ACCEPT
+#-I INPUT -s 192.168.1.0/24 -p tcp -m multiport --dports 2380 -j ACCEPT
+
+
+-I INPUT -p tcp -m multiport --dports 6443 -j ACCEPT
+-I INPUT -p tcp -m multiport --dports 179 -j ACCEPT
+-I INPUT -p tcp -m multiport --dports 10250 -j ACCEPT
+
+-I INPUT -p udp -m multiport --dports 4789 -j ACCEPT
+-I INPUT -p tcp -m multiport --dports 2379 -j ACCEPT
+-I INPUT -p tcp -m multiport --dports 2380 -j ACCEPT #}
+
+COMMIT
+
+
+
+
+
+{# iptables -I kubernetes-api -s nww-au1.networkedweb.com -j ACCEPT #}

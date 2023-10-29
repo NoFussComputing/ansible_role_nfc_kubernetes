@@ -1,0 +1,14 @@
+---
+- name: Firewall Rules
+  ansible.builtin.include_role:
+    name: nfc_firewall
+  vars:
+    nfc_firewall_enabled_kubernetes: "{{ nfc_kubernetes.enable_firewall | default(false) | bool }}"
+
+- name: K8s Cluster
+  ansible.builtin.include_tasks: k8s.yaml
+  when: kubernetes_type == 'k8s'
+
+- name: K3s Cluster
+  ansible.builtin.include_tasks: k3s.yaml
+  when: kubernetes_type == 'k3s'
