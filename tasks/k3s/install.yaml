@@ -7,6 +7,7 @@
     aptInstall:
       - name: curl
       - name: iptables
+      - name: jq
 
 
 - name: Create Required directories
@@ -182,6 +183,26 @@
     k3s_installed.rc | int == 1
       and
     not Kubernetes_Master | default(false) | bool
+
+
+- name: Wait for kubernets to be ready
+  ansible.builtin.shell:
+    cmd: |
+      set -o pipefail
+      if [ `which jq` ]; then echo $(kubectl get no $(hostname) -o json | jq .status.conditions[4].status | tr -d '"'); else echo jq command not found; exit 127; fi
+    executable: /bin/bash
+  register: kubernetes_ready_check
+  retries: 30
+  delay: 10
+  until: >
+    kubernetes_ready_check.stdout | default(false) | bool
+      or
+    kubernetes_ready_check.rc != 0
+  changed_when: false
+  failed_when: kubernetes_ready_check.rc != 0
+  when: >
+    kubernetes_config.cluster.prime.name == inventory_hostname
+
 
 - name: Set Kubernetes Final Install Fact
   ansible.builtin.set_fact:

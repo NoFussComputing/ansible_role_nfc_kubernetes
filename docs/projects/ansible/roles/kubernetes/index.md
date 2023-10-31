@@ -15,7 +15,13 @@ This role deploys a K3s cluster. In addition it has the following features:
 
 - CNI Setup
 
-- Configurable Container Registries
+- Configurable:
+
+    - Container Registries
+
+    - etcd snapshot cron schedule
+
+    - etcd snapshot retention
 
 - _[ToDo-#3](https://gitlab.com/nofusscomputing/projects/ansible/kubernetes/-/issues/3)_ Encryption between nodes (Wireguard)
 
@@ -40,9 +46,11 @@ The roles workflow is as follows
 
 1. Create required config files needed for installation
 
-1. _(kubernetes prime only)_ Add install required config files
+1. _(kubernetes prime master only)_ Add install required config files
 
 1. Install kubernetes
+
+1. _(kubernetes prime master only)_ Wait for kubernetes to be ready. Playbook is paused until `true`
 
 1. Configure Kubernetes
 

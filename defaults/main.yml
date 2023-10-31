@@ -13,6 +13,9 @@ KubernetesVersion_k3s_prefix: '+k3s1'
 
 kubernetes_private_container_registry: []                  # Optional, Array. if none use `[]`
 
+kubernetes_etcd_snapshot_cron_schedule: '0 */12 * * *'
+kubernetes_etcd_snapshot_retention: 5
+
 # host_external_ip: ''                                     # Optional, String. External IP Address for host.
 
 # Optional, Dict. Used to configure Kubernetes with OIDC Authentication.
@@ -79,7 +82,7 @@ k3s:
     - name: psa.yaml
       path: /var/lib/rancher/k3s/server
       content: ""
-        # apiVersion: apiserver.config.k8s.io/v1
+        # apiVersion: apiserver.conf0 */12 * * *ig.k8s.io/v1
         # kind: AdmissionConfiguration
         # plugins:
         # - name: PodSecurity
