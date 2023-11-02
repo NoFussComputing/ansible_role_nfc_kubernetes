@@ -31,8 +31,9 @@
 
 {%- endif -%}
 
-{%- for kubernetes_host in groups[kubernetes_type] -%}
+{%- for kubernetes_host in groups[kubernetes_config.cluster.group_name] -%}
 
+    {%- set kubernetes_host = hostvars[kubernetes_host].ansible_host -%}
 
     {%- if kubernetes_host is regex('^[a-z]') and ':' not in kubernetes_host -%} {#- Convert DNs name to IP Address -#}
 
@@ -46,7 +47,11 @@
 
       {%- endif -%}
 
-      {%- if kubernetes_host | list | length > 0 -%} {#- Convert dns lookup to list, and select the first item -#}
+      {%- if 
+        kubernetes_host is iterable
+          and
+        kubernetes_host is not string
+        -%} {#- Convert dns lookup to list, and select the first item -#}
         {%- set kubernetes_host = kubernetes_host | from_yaml_all | list -%}
 
         {%- set kubernetes_host = kubernetes_host[0] -%} 
@@ -57,29 +62,32 @@
 
     {%- for master_host in groups['kubernetes_master'] -%}
 
+      {%- if master_host in groups[kubernetes_config.cluster.group_name] -%}
 
-      {%- if master_host is regex('^[a-z]')  and ':' not in master_host -%} {#- Convert DNs name to IP Address -#}
+        {%- set master_host = hostvars[master_host].ansible_host -%}
 
-        {%- if ipv6 | default(false) -%}
+        {%- if master_host is regex('^[a-z]')  and ':' not in master_host -%} {#- Convert DNs name to IP Address -#}
 
-          {%- set master_host = query('community.dns.lookup', master_host + '.', type='AAAA' ) -%}
+          {%- if ipv6 | default(false) -%}
 
-        {%- else -%}
+            {%- set master_host = query('community.dns.lookup', master_host + '.', type='AAAA' ) -%}
 
-          {%- set master_host = query('community.dns.lookup', master_host + '.', type='A' ) -%}
+          {%- else -%}
+
+            {%- set master_host = query('community.dns.lookup', master_host + '.', type='A' ) -%}
+
+          {%- endif -%}
+  
+          {%- if master_host | list | length > 0 -%} {#- Convert dns lookup to list, and select the first item -#}
+            {%- set master_host = master_host | from_yaml_all | list -%}
+
+            {%- set master_host = master_host[0] -%} 
+          {%- endif -%}
 
         {%- endif -%}
- 
-        {%- if master_host | list | length > 0 -%} {#- Convert dns lookup to list, and select the first item -#}
-          {%- set master_host = master_host | from_yaml_all | list -%}
-
-          {%- set master_host = master_host[0] -%} 
-        {%- endif -%}
-
-      {%- endif -%}
 
 
-      {%- if Kubernetes_Master | default(false) | bool -%}
+        {%- if Kubernetes_Master | default(false) | bool -%}
 
           {%- if 
               master_host == kubernetes_host
@@ -103,11 +111,13 @@
 
               {#- master hosts only -#}
 
-              {%- set data.firewall_rules = data.firewall_rules + ['-I kubernetes-embedded-etcd -s ' + master_host + ' -j ACCEPT'] -%}
-              {# {%- set data.firewall_rules = data.firewall_rules + ['-I INPUT -s ' + master_host + ' -p tcp -m multiport --dports 2380 -j ACCEPT'] -%} #}
-              {%- set data.firewall_rules = data.firewall_rules + ['-I kubernetes-api -s ' + master_host + ' -j ACCEPT'] -%}
+                {%- set data.firewall_rules = data.firewall_rules + ['-I kubernetes-embedded-etcd -s ' + master_host + ' -j ACCEPT'] -%}
+                {# {%- set data.firewall_rules = data.firewall_rules + ['-I INPUT -s ' + master_host + ' -p tcp -m multiport --dports 2380 -j ACCEPT'] -%} #}
+                {%- set data.firewall_rules = data.firewall_rules + ['-I kubernetes-api -s ' + master_host + ' -j ACCEPT'] -%}
 
           {%- endif -%}
+
+        {%- endif -%}
 
       {%- endif -%}
 
@@ -133,65 +143,80 @@
 
       {#- All cluster Hosts -#}
 
-      {%- set data.firewall_rules = data.firewall_rules + ['-I kubelet-metrics -s ' + kubernetes_host + ' -j ACCEPT'] -%}
+
+      {%- if Kubernetes_Master | default(false) | bool -%}
+
+        {%- set data.firewall_rules = data.firewall_rules + ['-I kubernetes-api -s ' + kubernetes_host + ' -j ACCEPT'] -%}
+
+      {%- endif -%}
+
+      {%- set data.firewall_rules = data.firewall_rules + ['-I kubernetes-kubelet-metrics -s ' + kubernetes_host + ' -j ACCEPT'] -%}
+
+      {%- set data.firewall_rules = data.firewall_rules + ['-I kubernetes-flannel-wg-four -s ' + kubernetes_host + ' -j ACCEPT'] -%}
+
+      {%- set data.firewall_rules = data.firewall_rules + ['-I kubernetes-flannel-wg-six -s ' + kubernetes_host + ' -j ACCEPT'] -%}
+      
 
     {%- endif -%}
 
 {%- endfor -%}
 
+{%- if Kubernetes_Master | default(false) | bool -%}
 
-{%- for api_client in kubernetes_config.cluster.access | default([]) -%}
+  {%- for api_client in kubernetes_config.cluster.access | default([]) -%}
 
-  {%- if api_client is regex('^[a-z]')  and ':' not in api_client -%} {#- Convert DNs name to IP Address -#}
+    {%- if api_client is regex('^[a-z]')  and ':' not in api_client -%} {#- Convert DNs name to IP Address -#}
 
-    {%- set api_client_dns_name = api_client -%}
+      {%- set api_client_dns_name = api_client -%}
 
-    {%- if ipv6 | default(false) -%}
+      {%- if ipv6 | default(false) -%}
 
-      {%- set api_client = query('community.dns.lookup', api_client + '.', type='AAAA' ) -%}
+        {%- set api_client = query('community.dns.lookup', api_client + '.', type='AAAA' ) -%}
 
-    {%- else -%}
+      {%- else -%}
 
-      {%- set api_client = query('community.dns.lookup', api_client + '.', type='A' ) -%}
+        {%- set api_client = query('community.dns.lookup', api_client + '.', type='A' ) -%}
+
+      {%- endif -%}
+
+      {%- if api_client | list | length > 0 -%} {#- Convert dns lookup to list, and select the first item -#}
+
+        {%- set api_client = api_client | from_yaml_all | list -%}
+
+        {%- set api_client = api_client[0] -%}
+
+      {%- endif -%}
 
     {%- endif -%}
 
-    {%- if api_client | list | length > 0 -%} {#- Convert dns lookup to list, and select the first item -#}
 
-      {%- set api_client = api_client | from_yaml_all | list -%}
+    {%- if
+      api_client != ansible_host
+        and
+      (
+        (
+          ipv6 | default(false)
+            and
+          ':' in api_client
+        )
+          or
+        (
+          not ipv6 | default(false)
+            and
+          '.' in api_client
+        )
+      )
+    -%}
 
-      {%- set api_client = api_client[0] -%}
+      {#- Hosts allowed to access API -#}
+
+      {%- set data.firewall_rules = data.firewall_rules + ['-I kubernetes-api -s ' + api_client + ' -m comment --comment "host: ' + api_client_dns_name | default(api_client) + '" -j ACCEPT'] -%}
 
     {%- endif -%}
 
-  {%- endif -%}
+  {%- endfor %}
 
-
-  {%- if
-    api_client != ansible_host
-      and
-    (
-      (
-        ipv6 | default(false)
-          and
-        ':' in api_client
-      )
-        or
-      (
-        not ipv6 | default(false)
-          and
-        '.' in api_client
-      )
-    )
-  -%}
-
-    {#- Hosts allowed to access API -#}
-
-    {%- set data.firewall_rules = data.firewall_rules + ['-I kubernetes-api -s ' + api_client + ' -m comment --comment "host: ' + api_client_dns_name | default(api_client) + '" -j ACCEPT'] -%}
-
-  {%- endif -%}
-
-{%- endfor %}
+{%- endif %}
 
 *filter
 

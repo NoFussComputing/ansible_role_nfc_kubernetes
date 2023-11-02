@@ -1,38 +1,5 @@
 ---
 
-- name: Local Container Registry
-  ansible.builtin.copy:
-    content: |
-      #
-      # Private Container Registries for Kubernetes
-      #
-      # Managed By ansible/role/nfc_kubernetes
-      #
-      # Dont edit this file directly as it will be overwritten.
-      #
-
-      {% set registries = kubernetes_private_container_registry | default([]) -%}
-
-      {% if registries | length > 0 %}mirrors:
-        {% for entry in registries %}
-
-        {{ entry.name }}:
-          endpoint:
-            - "{{ entry.url }}"
-
-        {%- endfor %}
-      {% endif %}
-    dest: /etc/rancher/k3s/registries.yaml
-    owner: root
-    mode: '700'
-  # notify: "restart ContainerD"
-  # with_items: "{{ containerd.repositories }}"
-  # when:
-  #   ansible_os_family == 'Debian'
-  #    and
-  #  Kubernetes_private_container_registry | default([]) | length > 0
-
-
 - name: Additional config files
   ansible.builtin.copy:
     content: |
@@ -42,6 +9,7 @@
     owner: root
     group: root
   loop: "{{ k3s.files }}"
+  when: item.when | default(false) | bool
 
 
 - name: Copy Templates
@@ -53,22 +21,15 @@
     force: true
   notify: "{{ item.notify | default(omit) }}"
   loop: "{{ templates_to_apply }}"
+  when: >
+    item.when | default(true) | bool
   vars:
     templates_to_apply:
-      - src: "calico.yaml.j2"
-        dest: /var/lib/rancher/k3s/server/manifests/calico.yaml
 
       - src: kubernetes-manifest-rbac.yaml.j2
         dest: /var/lib/rancher/k3s/server/manifests/rbac-authorization-common.yaml
+        when: "{{ kubernetes_config.cluster.prime.name == inventory_hostname }}"
 
       - src: iptables-kubernetes.rules.j2
         dest: "/etc/iptables.rules.d/iptables-kubernetes.rules"
         notify: firewall_reloader
-
-      - src: k3s-registries.yaml.j2
-        dest: /etc/rancher/k3s/registries.yaml
-        notify: kubernetes_restart
-
-      - src: k3s-config.yaml.j2
-        dest: /etc/rancher/k3s/config.yaml
-        notify: kubernetes_restart
