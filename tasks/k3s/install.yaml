@@ -11,6 +11,48 @@
       - name: wireguard
 
 
+- name: Remove swapfile from /etc/fstab
+  mount:
+    name: "{{ item }}"
+    fstype: swap
+    state: absent
+  with_items:
+    - swap
+    - none
+  when: 
+    - ansible_os_family == 'Debian' # ansible_lsb.codename = bullseye, ansible_lsb.major_release = 11
+  tags:
+    - install
+
+
+- name: Disable swap
+  command: swapoff -a
+  changed_when: false
+  when: 
+    #- ansible_swaptotal_mb > 0
+    - ansible_os_family == 'Debian'
+  tags:
+    - install
+
+- name: Check an armbian os system
+  stat:
+    path: /etc/default/armbian-zram-config
+  register: armbian_stat_result
+
+
+- name: Armbian Disable Swap
+  ansible.builtin.shell:
+    cmd: |
+      sed -i 's/\# SWAP=false/SWAP=false/g' /etc/default/armbian-zram-config;
+      sed -i 's/ENABLED=true/ENABLED=false/g' /etc/default/armbian-zram-config;
+  args:
+    executable: bash
+  changed_when: false
+  # failed_when: false
+  #notify: RebootHost # doesnt need to reboot as swapoff -a covers the deployment
+  when: armbian_stat_result.stat.exists
+
+
 - name: Create Required directories
   ansible.builtin.file:
     name: "{{ item.name }}"
@@ -145,6 +187,7 @@
       - src: k3s-registries.yaml.j2
         dest: /etc/rancher/k3s/registries.yaml
         notify: kubernetes_restart
+        when: "{{ (kubernetes_private_container_registry | default([])) | from_yaml | list | length > 0 }}"
 
 
 # - name: Templates IPv6

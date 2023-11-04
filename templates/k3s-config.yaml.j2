@@ -28,8 +28,12 @@ kube-apiserver-arg:
 {% if kubernetes_config.cluster.oidc.groups_prefix | default('') != '' %}  - oidc-groups-prefix={{ kubernetes_config.cluster.oidc.groups_prefix }}{% endif %}
 {% endif %}
 {% endif %}
-{% if host_external_ip | default('') %} node-external-ip: "{{ host_external_ip }}"{% endif %}
-server: https://{{ hostvars[kubernetes_config.cluster.prime.name].ansible_host }}:6443
+kubelet-arg:
+  - system-reserved=cpu={{ kubelet_arg_system_reserved_cpu }},memory={{ kubelet_arg_system_reserved_memory }},ephemeral-storage={{ kubelet_arg_system_reserved_storage }}
+{% if host_external_ip | default('') %}node-external-ip: "{{ host_external_ip }}"{% endif %}
+
+{% if not Kubernetes_Prime | default(false) | bool -%}server: https://{{ hostvars[kubernetes_config.cluster.prime.name].ansible_host }}:6443{%- endif -%}
+
 {% if Kubernetes_Master | default(false) | bool -%}
 service-cidr: "{{ KubernetesServiceSubnet }}"
 {% endif %}

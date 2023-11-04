@@ -23,6 +23,8 @@ This role deploys a K3s cluster. In addition it has the following features:
 
     - etcd snapshot retention
 
+    - Configure System reserved CPU, Storage and Memory.
+
 - _[ToDo-#3](https://gitlab.com/nofusscomputing/projects/ansible/kubernetes/-/issues/3)_ Encryption between nodes (Wireguard)
 
 - [Firewall configured for kubernetes host](firewall.md)
@@ -38,7 +40,7 @@ This role deploys a K3s cluster. In addition it has the following features:
 
 ## Role Workflow
 
-The roles workflow is as follows
+For a more probable than not success this role first installs/configures prime master, other master(s) and worker nodes using the following simplified workflow:
 
 1. Download both install script and k3s binary to ansible controller
 

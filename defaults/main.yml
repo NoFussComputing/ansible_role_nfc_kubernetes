@@ -21,6 +21,10 @@ kubernetes_etcd_snapshot_retention: 5
 kubernetes_type: k8s                                       # Mandatory, String. choice K8s | k3s
 
 
+kubelet_arg_system_reserved_cpu: 450m
+kubelet_arg_system_reserved_memory: 512Mi
+kubelet_arg_system_reserved_storage: 8Gi
+
 nfc_kubernetes:
   enable_firewall: true             # Optional, bool enable firewall rules from role 'nfc_firewall'
 

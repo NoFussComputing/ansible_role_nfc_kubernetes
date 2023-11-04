@@ -90,16 +90,14 @@ metadata:
     app.kubernetes.io/version: ''
   name: authorization:namespace:owner
 rules:
-  - apiGroups: # Read-only access to resrouces
+  - apiGroups: # Read-Write access to resrouces
       - "*"
     resources:
-      - awx
       - cronjobs
       - daemonset
       - deployments
       - helmcharts
       - helmchartconfigs
-      - ingress
       - jobs
       - pods
       - pvc
@@ -109,7 +107,6 @@ rules:
       - serviceaccount
       - services
       - statefuleset
-      - storageclasses
       - configmap
     verbs:
       - create
@@ -117,6 +114,49 @@ rules:
       - list
       - watch
       - delete
+  - apiGroups: # Read-Remove access
+      - "*"
+    resources:
+      - ingress
+    verbs:
+      - get
+      - list
+      - watch
+      - delete
+  - apiGroups: # Read access
+      - "*"
+    resources:
+      - storageclasses
+    verbs:
+      - get
+      - list
+      - watch
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  annotations:
+    authorization/description: |-
+      Provide access for adding/editing/removing Ingress'.
+
+      This role is designed for a user who is responsible for the
+      cluster ingress.
+    authorization/target: namespace
+  name: authorization:cluster:ingress-admin
+rules:
+  - apiGroups:
+      - "*"
+    resources:
+      - pods
+      - nodes
+    verbs:
+      - create
+      - get
+      - list
+      - watch
+      - delete
+
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -170,6 +210,20 @@ subjects:
     name: administrators
   - kind: Group
     name: technician
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: authorization:ingress-admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: authorization:cluster:ingress-admin
+subjects:
+  - apiGroup: rbac.authorization.k8s.io
+    kind: Group
+    name: administrators
 
 
 # ---
