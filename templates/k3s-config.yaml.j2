@@ -56,8 +56,11 @@ node-label:
 
 {% if not Kubernetes_Prime | default(false) | bool -%}
 server: https://{{ hostvars[kubernetes_config.cluster.prime.name].ansible_host }}:6443
-servicelb-namespace: {{ kubernetes_config.cluster.networking.service_load_balancer_namespace | default('kube-system') }}
 {%- endif %}
+
+{% if kubernetes_config.cluster.prime.name == inventory_hostname -%}
+servicelb-namespace: {{ kubernetes_config.cluster.networking.service_load_balancer_namespace | default('kube-system') }}
+{% endif %}
 
 {% if Kubernetes_Master | default(false) | bool -%}
 service-cidr: "{{ KubernetesServiceSubnet }}"
