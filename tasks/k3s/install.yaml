@@ -95,7 +95,12 @@
   register: k3s_installed
 
 
-- name: Download K3s Binary
+- name: Check Machine Architecture
+  ansible.builtin.set_fact:
+    nfc_kubernetes_install_architectures: "{{ nfc_kubernetes_install_architectures | default({}) | combine({ansible_architecture: ''}) }}"
+
+
+- name: Download Install Script
   ansible.builtin.uri:
     url: "{{ item.url }}"
     method: GET
@@ -105,7 +110,7 @@
       - 304
     dest: "{{ item.dest }}"
     mode: "744"
-  register: k3s_download_files
+  register: k3s_download_script
   delegate_to: localhost
   run_once: true
   # no_log: true
@@ -116,14 +121,43 @@
     download_files:
       - dest: /tmp/install.sh
         url: https://get.k3s.io
-      - dest: "/tmp/k3s"
-        url: "https://github.com/k3s-io/k3s/releases/download/v{{ KubernetesVersion + KubernetesVersion_k3s_prefix | urlencode }}/k3s"
+
+
+- name: Download K3s Binary
+  ansible.builtin.uri:
+    url: |-
+      https://github.com/k3s-io/k3s/releases/download/v
+        {{- KubernetesVersion + KubernetesVersion_k3s_prefix | urlencode -}}
+      /k3s
+      {%- if cpu_arch.key == 'aarch64' -%}
+      -arm64
+      {%- endif %}
+    method: GET
+    return_content: true
+    status_code:
+      - 200
+      - 304
+    dest: "/tmp/k3s.{{ cpu_arch.key }}"
+    mode: "744"
+  register: k3s_download_files
+  delegate_to: localhost
+  run_once: true
+  # no_log: true
+  when: ansible_os_family == 'Debian'
+  loop: "{{ nfc_kubernetes_install_architectures | dict2items }}"
+  loop_control:
+    loop_var: cpu_arch
+  vars:
+    ansible_connection: local
 
 
 - name: "[TRACE] Downloaded File SHA256"
   ansible.builtin.set_fact:
-    hash_sha256_k3s_downloaded_binary: "{{ lookup('ansible.builtin.file', '/tmp/k3s') | hash('sha256') | string }}"
+    hash_sha256_k3s_downloaded_binary: "{{ lookup('ansible.builtin.file', '/tmp/k3s.' + cpu_arch.key) | hash('sha256') | string }}"
   delegate_to: localhost
+  loop: "{{ nfc_kubernetes_install_architectures | dict2items }}"
+  loop_control:
+    loop_var: cpu_arch
 
 
 - name: Existing k3s File hash
@@ -135,7 +169,7 @@
 
 - name: Copy K3s binary to Host
   ansible.builtin.copy:
-    src: "/tmp/k3s"
+    src: "/tmp/k3s.{{ ansible_architecture }}"
     dest: "/usr/local/bin/k3s"
     mode: '740'
     owner: root
@@ -305,3 +339,4 @@
     kubernetes_installed: true
     # Clear Token as no llonger required and due to being a sensitive value
     k3s_join_token: null
+    nfc_kubernetes_install_architectures: {}

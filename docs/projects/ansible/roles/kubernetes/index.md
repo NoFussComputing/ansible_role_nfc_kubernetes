@@ -22,8 +22,14 @@ This role deploys a K3s cluster. In addition it has the following features:
     - etcd snapshot cron schedule
 
     - etcd snapshot retention
+    
+    - Cluster Domain
 
     - Configure System reserved CPU, Storage and Memory.
+
+    - Node Labels
+
+    - Service Load Balancer Namespace
 
 - _[ToDo-#3](https://gitlab.com/nofusscomputing/projects/ansible/kubernetes/-/issues/3)_ Encryption between nodes (Wireguard)
 
@@ -64,6 +70,6 @@ If the playbook is setup as per [our recommendation](ansible.md) step 2 onwards 
 
 ``` yaml title="defaults/main.yaml" linenums="1"
 
---8<-- "defaults/main.yaml"
+--8<-- "defaults/main.yml"
 
 ```
