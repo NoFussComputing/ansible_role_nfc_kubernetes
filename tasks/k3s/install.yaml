@@ -100,7 +100,7 @@
     nfc_kubernetes_install_architectures: "{{ nfc_kubernetes_install_architectures | default({}) | combine({ansible_architecture: ''}) }}"
 
 
-- name: Download Install Script
+- name: Download Install Scripts
   ansible.builtin.uri:
     url: "{{ item.url }}"
     method: GET
@@ -121,6 +121,8 @@
     download_files:
       - dest: /tmp/install.sh
         url: https://get.k3s.io
+      - dest: /tmp/install_olm.sh
+        url: https://raw.githubusercontent.com/operator-framework/operator-lifecycle-manager/v{{ kubernetes_version_olm }}/scripts/install.sh
 
 
 - name: Download K3s Binary
@@ -176,13 +178,18 @@
     group: root
   when: hash_sha256_k3s_existing_binary.stat.checksum | default('0') != hash_sha256_k3s_downloaded_binary
 
-- name: Copy install script to Host
+- name: Copy install scripts to Host
   ansible.builtin.copy:
-    src: "/tmp/install.sh"
-    dest: "/tmp/install.sh"
+    src: "{{ item }}"
+    dest: "{{ item }}"
     mode: '755'
     owner: root
     group: root
+  loop: "{{ install_scripts }}"
+  vars:
+    install_scripts:
+      - "/tmp/install.sh"
+      - "/tmp/install_olm.sh"
   # when: hash_sha256_k3s_existing_binary.stat.checksum | default('0') != hash_sha256_k3s_downloaded_binary
 
 - name: Required Initial config files
@@ -275,6 +282,21 @@
   failed_when: kubernetes_ready_check.rc != 0
 
 
+- name: Install olm
+  ansible.builtin.shell:
+    cmd: |
+      /tmp/install_olm.sh v{{ kubernetes_version_olm }}
+  changed_when: false
+  failed_when: >
+    'already installed' not in install_olm.stdout
+      and
+    install_olm.rc == 1
+  register: install_olm
+  when: >
+    kubernetes_config.cluster.prime.name == inventory_hostname
+      and
+    kubernetes_olm_install | default(true) | bool
+
 - name: Enable Cluster Encryption
   ansible.builtin.command:
     cmd: kubectl patch felixconfiguration default --type='merge' -p '{"spec":{"wireguardEnabled":true,"wireguardEnabledV6":true}}'
@@ -282,7 +304,7 @@
   when: >
     kubernetes_config.cluster.prime.name == inventory_hostname
       and
-    kubernetes.networking.encrypt | default(false) | bool
+    kubernetes_config.cluster.networking.encrypt | default(false) | bool
 
 
 - name: Fetch Join Token
@@ -305,12 +327,12 @@
 - name: Install K3s (master nodes)
   ansible.builtin.shell:
     cmd: |
-      set -o pipefail
       INSTALL_K3S_EXEC="server" \
       INSTALL_K3S_SKIP_DOWNLOAD=true \
       INSTALL_K3S_VERSION="v{{ KubernetesVersion }}{{ KubernetesVersion_k3s_prefix }}" \
       K3S_TOKEN="{{ k3s_join_token }}" \
       /tmp/install.sh
+    executable: /bin/bash
   changed_when: false
   when: >
     Kubernetes_Master | default(false) | bool

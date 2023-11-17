@@ -54,11 +54,12 @@
         -%} {#- Convert dns lookup to list, and select the first item -#}
         {%- set kubernetes_host = kubernetes_host | from_yaml_all | list -%}
 
-        {%- set kubernetes_host = kubernetes_host[0] -%} 
+        {%- set kubernetes_host = kubernetes_host[0] | default('') -%} 
       {%- endif -%}
 
     {%- endif -%}
 
+  {%- if kubernetes_host != '' -%}
 
     {%- for master_host in groups['kubernetes_master'] -%}
 
@@ -158,6 +159,8 @@
       
 
     {%- endif -%}
+
+  {%- endif -%}
 
 {%- endfor -%}
 

@@ -43,6 +43,8 @@ This role deploys a K3s cluster. In addition it has the following features:
 
 - _[ToDo-#5](https://gitlab.com/nofusscomputing/projects/ansible/kubernetes/-/issues/5)_ Restore backup on fresh install of a cluster
 
+- Installs OLM for operator subscriptions
+
 
 ## Role Workflow
 

@@ -7,6 +7,7 @@ Kubernetes_Master: false                                   # Optional, Boolean. 
 
 ContainerDioVersion: 1.6.20-1
 KubernetesVersion: '1.26.2'                                # must match the repository release version
+kubernetes_version_olm: '0.26.0'
 
 KubernetesVersion_k8s_prefix: '-00'
 KubernetesVersion_k3s_prefix: '+k3s1'
@@ -25,6 +26,9 @@ kubelet_arg_system_reserved_cpu: 450m
 kubelet_arg_system_reserved_memory: 512Mi
 kubelet_arg_system_reserved_storage: 8Gi
 
+# kubernetes_olm_install: true # optional, boolean. default=true
+
+
 nfc_kubernetes:
   enable_firewall: true             # Optional, bool enable firewall rules from role 'nfc_firewall'
 
@@ -39,7 +43,7 @@ k3s:
         kind: Policy
         rules:
         - level: Request
-      when: "{{ kubernetes_config.cluster.prime.name == inventory_hostname }}"
+      when: "{{ Kubernetes_Master | default(false) }}"
 
     - name: 90-kubelet.conf
       path: /etc/sysctl.d
