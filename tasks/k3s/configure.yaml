@@ -33,3 +33,24 @@
       - src: iptables-kubernetes.rules.j2
         dest: "/etc/iptables.rules.d/iptables-kubernetes.rules"
         notify: firewall_reloader
+
+
+- name: Add Kubernetes Node Labels
+  ansible.builtin.copy:
+    content: |-
+      apiVersion: v1
+      kind: Node
+      metadata:
+        name: "{{ inventory_hostname }}"
+        labels:
+          {{ item | to_nice_yaml | indent(4) }}
+    dest: /var/lib/rancher/k3s/server/manifests/node-manifest-{{ inventory_hostname }}.yaml
+    owner: root
+    group: root
+    mode: '700'
+  delegate_to: "{{ kubernetes_config.cluster.prime.name }}"
+  with_items:
+    - "{{ kubernetes_config.hosts[inventory_hostname].labels }}"
+  when:
+    - ( kubernetes_config.hosts[inventory_hostname].labels is defined and
+      kubernetes_config.hosts[inventory_hostname].labels|default('')|length > 0 )
