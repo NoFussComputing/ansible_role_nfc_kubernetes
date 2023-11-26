@@ -16,16 +16,15 @@
 
 - name: Restart Kubernetes
   ansible.builtin.service:
-    name: "{% if kubernetes_type == 'k3s' %}k3s{% else %}kubelet{% endif %}"
+    name: |-
+      {%- if kubernetes_type == 'k3s' -%}
+        {%- if Kubernetes_Master | default(false) | bool -%}
+          k3s
+        {%- else -%}
+          k3s-agent
+        {%- endif -%}
+      {%- else -%}
+        kubelet
+      {%- endif %}
     state: restarted
   listen: kubernetes_restart
-  when: >
-    Kubernetes_Master | default(false) | bool
-
-- name: Restart Kubernetes
-  ansible.builtin.service:
-    name: "{% if kubernetes_type == 'k3s' %}k3s-agent{% else %}kubelet{% endif %}"
-    state: restarted
-  listen: kubernetes_restart
-  when: >
-    not Kubernetes_Master | default(false) | bool

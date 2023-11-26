@@ -135,7 +135,7 @@
       -arm64
       {%- endif %}
     method: GET
-    return_content: true
+    return_content: false
     status_code:
       - 200
       - 304
@@ -204,6 +204,23 @@
   when: >
     item.when | default(true) | bool
   #   kubernetes_config.cluster.prime.name == inventory_hostname
+
+
+- name: Fetch Join Token
+  ansible.builtin.slurp:
+    src: /var/lib/rancher/k3s/server/token
+  delegate_to: "{{ kubernetes_config.cluster.prime.name }}"
+  run_once: true
+  register: k3s_join_token
+  no_log: true # Value is sensitive
+
+
+- name: Create Token fact
+  ansible.builtin.set_fact:
+    k3s_join_token: "{{ k3s_join_token.content | b64decode | replace('\n', '') }}"
+  delegate_to: "{{ kubernetes_config.cluster.prime.name }}"
+  run_once: true
+  no_log: true # Value is sensitive
 
 
 - name: Copy Intial required templates
@@ -305,23 +322,6 @@
     kubernetes_config.cluster.prime.name == inventory_hostname
       and
     kubernetes_config.cluster.networking.encrypt | default(false) | bool
-
-
-- name: Fetch Join Token
-  ansible.builtin.slurp:
-    src: /var/lib/rancher/k3s/server/token
-  delegate_to: "{{ kubernetes_config.cluster.prime.name }}"
-  run_once: true
-  register: k3s_join_token
-  no_log: true # Value is sensitive
-
-
-- name: Create Token fact
-  ansible.builtin.set_fact:
-    k3s_join_token: "{{ k3s_join_token.content | b64decode | replace('\n', '') }}"
-  delegate_to: "{{ kubernetes_config.cluster.prime.name }}"
-  run_once: true
-  no_log: true # Value is sensitive
 
 
 - name: Install K3s (master nodes)

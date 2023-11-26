@@ -42,8 +42,28 @@ kubelet-arg:
   - system-reserved=cpu={{ kubelet_arg_system_reserved_cpu }},memory={{ kubelet_arg_system_reserved_memory }},ephemeral-storage={{ kubelet_arg_system_reserved_storage }}
 {% if host_external_ip | default('') %}node-external-ip: "{{ host_external_ip }}"{% endif %}
 
-{% if not Kubernetes_Prime | default(false) | bool -%}
-server: https://{{ hostvars[kubernetes_config.cluster.prime.name].ansible_host }}:6443
+{% if 
+  groups[kubernetes_config.cluster.group_name] | default([]) | list | length > 0
+-%}
+server: {% for cluster_node in groups[kubernetes_config.cluster.group_name] +%}
+  {% if
+      cluster_node in groups['kubernetes_master'] 
+    -%}
+        - https://
+        {%- if hostvars[cluster_node].host_external_ip is defined -%}
+
+          {{ hostvars[cluster_node].host_external_ip }}
+
+        {%- else -%}
+
+          {{ hostvars[cluster_node].ansible_host }}
+
+        {%- endif -%}
+        :6443
+    {%- endif -%}
+
+  {%- endfor %}
+
 {%- endif %}
 
 {% if Kubernetes_Master | default(false) | bool -%}
