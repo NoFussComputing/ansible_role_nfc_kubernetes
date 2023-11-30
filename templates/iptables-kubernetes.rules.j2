@@ -151,6 +151,8 @@
 
       {%- endif -%}
 
+      {%- set data.firewall_rules = data.firewall_rules + ['-I kubernetes-flannel-vxlan -s ' + kubernetes_host + ' -j ACCEPT'] -%}
+
       {%- set data.firewall_rules = data.firewall_rules + ['-I kubernetes-kubelet-metrics -s ' + kubernetes_host + ' -j ACCEPT'] -%}
 
       {%- set data.firewall_rules = data.firewall_rules + ['-I kubernetes-flannel-wg-four -s ' + kubernetes_host + ' -j ACCEPT'] -%}
@@ -165,6 +167,12 @@
 {%- endfor -%}
 
 {%- if Kubernetes_Master | default(false) | bool -%}
+
+  {%- if host_external_ip is defined -%}
+
+    {%- set data.firewall_rules = data.firewall_rules + ['-I kubernetes-api -s ' + host_external_ip + ' -m comment --comment "hosts configured external IP" -j ACCEPT'] -%}
+
+  {%- endif -%}
 
   {%- for api_client in kubernetes_config.cluster.access | default([]) -%}
 
