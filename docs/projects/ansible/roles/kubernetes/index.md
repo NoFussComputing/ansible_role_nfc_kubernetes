@@ -29,6 +29,8 @@ This role deploys a K3s cluster. In addition it has the following features:
 
     - Node Labels
 
+    - Node Taints
+
     - Service Load Balancer Namespace
 
 - _[ToDo-#3](https://gitlab.com/nofusscomputing/projects/ansible/kubernetes/-/issues/3)_ Encryption between nodes (Wireguard)

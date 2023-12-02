@@ -42,15 +42,21 @@
       kind: Node
       metadata:
         name: "{{ inventory_hostname }}"
+        {% if kubernetes_config.hosts[inventory_hostname].labels | default([]) | list | length > 0 -%}
         labels:
-          {{ item | to_nice_yaml | indent(4) }}
+          {{ kubernetes_config.hosts[inventory_hostname].labels | to_nice_yaml | indent(4) }}
+        {%- endif +%}
+      {% if kubernetes_config.hosts[inventory_hostname].taints | default([]) | list | length > 0 -%}
+      spec:
+        taints:
+          {{ kubernetes_config.hosts[inventory_hostname].taints | to_nice_yaml(indent=0) | indent(4) }}
+      {% endif %}
     dest: /var/lib/rancher/k3s/server/manifests/node-manifest-{{ inventory_hostname }}.yaml
     owner: root
     group: root
     mode: '700'
   delegate_to: "{{ kubernetes_config.cluster.prime.name }}"
-  with_items:
-    - "{{ kubernetes_config.hosts[inventory_hostname].labels }}"
   when:
-    - ( kubernetes_config.hosts[inventory_hostname].labels is defined and
-      kubernetes_config.hosts[inventory_hostname].labels|default('')|length > 0 )
+    kubernetes_config.hosts[inventory_hostname].labels | default([]) | list | length > 0
+      or
+    kubernetes_config.hosts[inventory_hostname].taints | default([]) | list | length > 0

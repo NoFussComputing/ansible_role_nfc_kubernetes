@@ -113,3 +113,13 @@ k3s:
 #    groups_claim: roles                                    # Mandatory, String. Claim name containing groups
 #    groups_prefix: ''                                      # Optional, String. string to append to groups
 
+#     hosts: 
+
+#       my-host-name:
+#         labels:
+#           mylabel: myvalue
+
+#         taints:
+#           - effect: NoSchedule
+#             key: taintkey
+#             value: taintvalue
