@@ -33,6 +33,11 @@ kubelet_arg_system_reserved_storage: 8Gi
 nfc_kubernetes:
   enable_firewall: true             # Optional, bool enable firewall rules from role 'nfc_firewall'
 
+nfc_kubernetes_no_restart: false         # Set to true to prevent role from restarting kubernetes on the host(s)
+nfc_kubernetes_no_restart_master: false  # Set to true to prevent role from restarting kubernetes on master host(s)
+nfc_kubernetes_no_restart_prime: false   # Set to true to prevent role from restarting kubernetes on prime host
+nfc_kubernetes_no_restart_slave: false   # Set to true to prevent role from restarting kubernetes on slave host(s)
+
 
 k3s:
   files:

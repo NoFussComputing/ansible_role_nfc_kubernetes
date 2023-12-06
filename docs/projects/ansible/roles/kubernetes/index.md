@@ -68,6 +68,15 @@ For a more probable than not success this role first installs/configures prime m
 
 If the playbook is setup as per [our recommendation](ansible.md) step 2 onwards is first done on master nodes then worker nodes.
 
+!!! tip
+    If you prefer to manually restart the kubernetes service the following variables can be set to prevent a restart of the kubernetes service
+    ``` yaml
+    nfc_kubernetes_no_restart: false
+    nfc_kubernetes_no_restart_master: false
+    nfc_kubernetes_no_restart_prime: false
+    nfc_kubernetes_no_restart_slave: false
+    ```
+    _See default variables below for explanation of each variable if it's not evident enough._
 
 ## Default Variables
 

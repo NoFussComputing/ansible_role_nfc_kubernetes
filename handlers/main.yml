@@ -28,3 +28,29 @@
       {%- endif %}
     state: restarted
   listen: kubernetes_restart
+  when: |-
+    {%- if
+      nfc_kubernetes_no_restart
+        or
+      (
+        inventory_hostname in kubernetes_master
+          and
+        nfc_kubernetes_no_restart_master
+      )
+        or
+      (
+        inventory_hostname == kubernetes_config.config.prime.name
+          and
+        nfc_kubernetes_no_restart_prime
+      )
+        or
+      (
+        inventory_hostname in kubernetes_worker
+          and
+        nfc_kubernetes_no_restart_slave
+      )
+    -%}
+      false
+    {%- else -%}
+      true
+    {%- endif %}
