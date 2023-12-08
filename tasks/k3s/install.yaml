@@ -12,30 +12,30 @@
 
 
 - name: Remove swapfile from /etc/fstab
-  mount:
+  ansible.posix.mount:
     name: "{{ item }}"
     fstype: swap
     state: absent
   with_items:
     - swap
     - none
-  when: 
+  when:
     - ansible_os_family == 'Debian' # ansible_lsb.codename = bullseye, ansible_lsb.major_release = 11
   tags:
     - install
 
 
 - name: Disable swap
-  command: swapoff -a
+  ansible.builtin.command:
+    cmd: swapoff -a
   changed_when: false
-  when: 
-    #- ansible_swaptotal_mb > 0
+  when:
     - ansible_os_family == 'Debian'
   tags:
     - install
 
 - name: Check an armbian os system
-  stat:
+  ansible.builtin.stat:
     path: /etc/default/armbian-zram-config
   register: armbian_stat_result
 
@@ -48,8 +48,6 @@
   args:
     executable: bash
   changed_when: false
-  # failed_when: false
-  #notify: RebootHost # doesnt need to reboot as swapoff -a covers the deployment
   when: armbian_stat_result.stat.exists
 
 

@@ -29,7 +29,7 @@
     state: restarted
   listen: kubernetes_restart
   when: |-
-    {%- if
+    not (
       nfc_kubernetes_no_restart
         or
       (
@@ -49,8 +49,5 @@
           and
         nfc_kubernetes_no_restart_slave
       )
-    -%}
-      false
-    {%- else -%}
-      true
-    {%- endif %}
+    )
+
