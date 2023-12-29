@@ -33,7 +33,7 @@
       nfc_kubernetes_no_restart
         or
       (
-        inventory_hostname in kubernetes_master
+        inventory_hostname in groups['kubernetes_master']
           and
         nfc_kubernetes_no_restart_master
       )

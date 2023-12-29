@@ -20,7 +20,7 @@ cluster-init: true
 disable-network-policy: true
 disable:
   - traefik
-  - metrics-server
+#  - metrics-server
 etcd-snapshot-retention: {{ kubernetes_etcd_snapshot_retention | int }}
 etcd-snapshot-schedule-cron: "{{ kubernetes_etcd_snapshot_cron_schedule }}"
 flannel-backend: none
