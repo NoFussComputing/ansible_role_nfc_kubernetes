@@ -1,0 +1,72 @@
+---
+
+- name: Validate Virtualization Support
+  ansible.builtin.include_tasks:
+    file: kubevirt/validate.yaml
+    apply:
+      tags:
+        - always
+  tags:
+    - always
+
+
+- name: Deploy KubeVirt
+  ansible.builtin.template:
+    src: "{{ item }}"
+    dest: "/var/lib/rancher/k3s/server/manifests/{{ item | replace('.j2', '') | lower }}"
+    owner: root
+    mode: '700'
+    force: true
+  notify: "{{ item.notify | default(omit) }}"
+  loop: "{{ templates_to_apply }}"
+  diff: true
+  vars:
+    templates_to_apply:
+      - kubevirt-operator.yaml.j2
+      - kubevirt-cr.yaml.j2
+
+
+- name: Fetch virtctl Kubectl Plugin
+  ansible.builtin.uri:
+    url: |-
+      https://github.com/kubevirt/kubevirt/releases/download/{{
+        nfc_role_kubernetes_container_images.kubevirt_operator.tag }}/virtctl-{{
+          nfc_role_kubernetes_container_images.kubevirt_operator.tag }}-linux-
+      {%- if cpu_arch.key == 'aarch64' -%}
+        arm64
+      {%- else -%}
+        amd64
+      {%- endif %}
+    status_code:
+      - 200
+      - 304
+    dest: "/tmp/kubectl-virtctl.{{ cpu_arch.key }}"
+    mode: '777'
+    owner: root
+    group: 'root'
+  changed_when: false
+  become: true
+  delegate_to: localhost
+  loop: "{{ nfc_kubernetes_install_architectures | dict2items }}"
+  loop_control:
+    loop_var: cpu_arch
+  vars:
+    ansible_connection: local
+
+
+- name: Add virtctl Plugin
+  ansible.builtin.copy:
+    src: "/tmp/kubectl-virtctl.{{ ansible_architecture }}"
+    dest: /usr/local/bin/kubectl-virt
+    mode: '770'
+    owner: root
+    group: 'root'
+  become: true
+  when: nfc_role_kubernetes_master
+
+
+- name: Wait for KubeVirt to initialize
+  ansible.builtin.command:
+    cmd: kubectl -n kubevirt wait kv kubevirt --for condition=Available
+  changed_when: false
+  failed_when: false

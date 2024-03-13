@@ -1,0 +1,25 @@
+---
+
+- name: Install LibVirt-Clients
+  ansible.builtin.apt:
+    name: libvirt-clients
+    state: present
+
+
+- name: Confirm Virtualization Support
+  ansible.builtin.command:
+    cmd: virt-host-validate qemu
+  changed_when: false
+  failed_when: false
+  register: virt_support_check_command
+
+
+- name: Confirm No QEMU failures
+  ansible.builtin.assert:
+    that:
+      - (": FAIL" | string) not in (item | string)
+      - |
+        (": PASS" | string) in (item | string)
+          or
+        (": WARN" | string) in (item | string)
+  loop: "{{ virt_support_check_command.stdout_lines }}"

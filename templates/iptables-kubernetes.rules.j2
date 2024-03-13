@@ -31,7 +31,7 @@
 
 {%- endif -%}
 
-{%- for kubernetes_host in groups[kubernetes_config.cluster.group_name] -%}
+{%- for kubernetes_host in groups[kubernetes_config.cluster.group_name | default('me_is_optional')] | default([]) -%}
 
     {%- set kubernetes_host = hostvars[kubernetes_host].ansible_host -%}
 
@@ -63,7 +63,7 @@
 
     {%- for master_host in groups['kubernetes_master'] -%}
 
-      {%- if master_host in groups[kubernetes_config.cluster.group_name] -%}
+      {%- if master_host in groups[kubernetes_config.cluster.group_name | default('me_is_optional')] | default([]) -%}
 
         {%- set master_host = hostvars[master_host].ansible_host -%}
 
@@ -88,7 +88,7 @@
         {%- endif -%}
 
 
-        {%- if Kubernetes_Master | default(false) | bool -%}
+        {%- if nfc_role_kubernetes_master | default(false) | bool -%}
 
           {%- if 
               master_host == kubernetes_host
@@ -150,7 +150,7 @@
       {#- All cluster Hosts -#}
 
 
-      {%- if Kubernetes_Master | default(false) | bool -%}
+      {%- if nfc_role_kubernetes_master | default(false) | bool -%}
 
         {%- set data.firewall_rules = data.firewall_rules + ['-I kubernetes-api -s ' + kubernetes_host + ' -j ACCEPT'] -%}
 
@@ -182,7 +182,7 @@
 
 {%- endfor -%}
 
-{%- if Kubernetes_Master | default(false) | bool -%}
+{%- if nfc_role_kubernetes_master | default(false) | bool -%}
 
   {%- if host_external_ip is defined -%}
 

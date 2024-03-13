@@ -11,7 +11,7 @@ spec:
     hostPorts: Enabled
     ipPools:
     - blockSize: 26
-      cidr: {{ kubernetes_config.cluster.networking.podSubnet }}
+      cidr: {{ kubernetes_config.cluster.networking.podSubnet | default(nfc_role_kubernetes_pod_subnet) }}
       disableBGPExport: false
       encapsulation: VXLAN
       natOutgoing: Enabled
@@ -41,7 +41,7 @@ spec:
     type: RollingUpdate
   nonPrivileged: Disabled
   serviceCIDRs:
-    - {{ kubernetes_config.cluster.networking.ServiceSubnet }}
+    - {{ kubernetes_config.cluster.networking.ServiceSubnet | default(nfc_role_kubernetes_service_subnet) }}
   typhaDeployment:
     spec:
       template:

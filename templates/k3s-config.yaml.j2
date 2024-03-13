@@ -6,7 +6,12 @@
 # Dont edit this file directly as it will be overwritten.
 #
 
-{%- if inventory_hostname in groups['kubernetes_master'] -%}
+{%- if 
+  inventory_hostname in groups['kubernetes_master']
+    or
+  kubernetes_config.cluster.prime.name | default(inventory_hostname) == inventory_hostname
+-%}
+
   {%
 
   set kube_apiserver_arg = [
@@ -19,31 +24,38 @@
   -%}
     {%
     set servers_config = {
-        "cluster-cidr": KubernetesPodSubnet,
+        "cluster-cidr": nfc_role_kubernetes_pod_subnet,
         "disable": [
           "traefik"
         ],
         "disable-network-policy": true,
-        "etcd-snapshot-retention": kubernetes_etcd_snapshot_retention | int,
-        "etcd-snapshot-schedule-cron":  kubernetes_etcd_snapshot_cron_schedule | string,
         "flannel-backend": "none",
-        "service-cidr": KubernetesServiceSubnet
+        "service-cidr": nfc_role_kubernetes_service_subnet
       }
     -%}
 
-    {%- if 
-          kubernetes_config.cluster.domain_name is defined
-            and
-          kubernetes_config.cluster.domain_name | default('') != ''
-    -%}
+    {%- if nfc_role_kubernetes_etcd_enabled -%}
 
         {%- set servers_config = servers_config | combine({
-          "cluster-domain": kubernetes_config.cluster.domain_name
+          "etcd-snapshot-retention": kubernetes_etcd_snapshot_retention | int,
+          "etcd-snapshot-schedule-cron":  kubernetes_etcd_snapshot_cron_schedule | string,
         }) -%}
 
     {%- endif -%}
 
-    {%- if kubernetes_config.cluster.oidc.enabled | default(false) | bool -%}
+    {%- if 
+          kubernetes_config.cluster.domain_name | default(nfc_role_kubernetes_cluster_domain) is defined
+            and
+          kubernetes_config.cluster.domain_name | default(nfc_role_kubernetes_cluster_domain) != ''
+    -%}
+
+        {%- set servers_config = servers_config | combine({
+          "cluster-domain": kubernetes_config.cluster.domain_name | default(nfc_role_kubernetes_cluster_domain)
+        }) -%}
+
+    {%- endif -%}
+
+    {%- if kubernetes_config.cluster.oidc.enabled | default(nfc_role_kubernetes_oidc_enabled) | default(false) | bool -%}
 
       {%- 
         set kube_apiserver_arg = kube_apiserver_arg + [
@@ -129,7 +141,7 @@
 -%}
 
 
-{%- if groups[kubernetes_config.cluster.group_name] | default([]) | list | length > 0 -%}
+{%- if groups[kubernetes_config.cluster.group_name | default('make_me_optional')] | default([]) | list | length > 0 -%}
   
   {%- if k3s_installed.rc == 0 -%}
 
@@ -215,7 +227,11 @@
 {# EoF All Nodes #}
 
 
-{%- if inventory_hostname in groups['kubernetes_master'] -%}
+{%- if 
+  inventory_hostname in groups['kubernetes_master']
+    or
+  kubernetes_config.cluster.prime.name | default(inventory_hostname) == inventory_hostname
+-%}
 
   {%- set servers_config = servers_config | combine( all_nodes_config ) -%}
 

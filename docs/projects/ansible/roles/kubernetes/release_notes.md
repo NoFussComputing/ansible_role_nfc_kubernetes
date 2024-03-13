@@ -11,6 +11,12 @@ This document details any changes that have occured that may impact users of thi
 
 ## Changes with an impact
 
+- _**13 Mar 2024**_ Container Images now a dictionary. This role has two images `kubevirt_operator` and `tigera_operator`.
+
+    - All Images are stored in dictionary `nfc_role_kubernetes_container_images` with each image using its own dictionary with mandatory keys `registry`, `image` and `tag`. This change has been made to cater for those whom store their images within their inventory as a dict of dict. For instance to use your inventory image declare variable `nfc_role_kubernetes_container_images.kubevirt_operator: my_images.my_kubevirt_dict` as an example.
+
+    - A lot of variables have been updated. To view what has changed, please see `defaults/main.yaml` in [MR !35](https://gitlab.com/nofusscomputing/projects/ansible/kubernetes/-/merge_requests/35)
+
 - _**31 Jan 2024**_ Calico CNI deployment has been migrated to use the calico operator. 
 
     - All new cluster installations will be deployed with the operator

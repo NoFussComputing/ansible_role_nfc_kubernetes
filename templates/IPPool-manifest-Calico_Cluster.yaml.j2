@@ -9,7 +9,7 @@ spec:
     - Workload
     - Tunnel
   blockSize: 26
-  cidr: {{ kubernetes_config.cluster.networking.podSubnet }}
+  cidr: {{ kubernetes_config.cluster.networking.podSubnet | default(nfc_role_kubernetes_pod_subnet) }}
   ipipMode: Never
   natOutgoing: true
   nodeSelector: all()
