@@ -1,0 +1,29 @@
+galaxy_info:
+
+  role_name: nfc_kubernetes
+
+  author: No Fuss Computing
+
+  description: Install and configure single and multi-node K3s Kubernetes cluster.
+
+  issue_tracker_url: https://gitlab.com/nofusscomputing/projects/ansible/collections/kubernetes
+
+  license: MIT
+
+  min_ansible_version: '2.15'
+
+  platforms:
+
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+
+    - name: Ubuntu
+      versions:
+        - 21
+
+  galaxy_tags:
+    - cluster
+    - k3s
+    - kubernetes

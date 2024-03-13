@@ -1,0 +1,35 @@
+---
+
+- name: Install/Configure Kubernetes Prime Master Node
+  ansible.builtin.include_tasks:
+    file: install.yaml
+  tags:
+    - always
+  when:
+    kubernetes_config.cluster.prime.name | default(inventory_hostname) == inventory_hostname
+      and
+    nfc_role_kubernetes_prime | bool
+
+
+- name: Install/Configure Kubernetes on remaining Master Nodes
+  ansible.builtin.include_tasks:
+    file: install.yaml
+  tags:
+    - always
+  when:
+    kubernetes_config.cluster.prime.name | default(inventory_hostname) != inventory_hostname
+      and
+    nfc_role_kubernetes_master | bool
+
+
+- name: Install/Configure Kubernetes on Worker Nodes
+  ansible.builtin.include_tasks:
+    file: install.yaml
+  tags:
+    - always
+  when: >
+    nfc_role_kubernetes_worker | bool
+      and
+    not nfc_role_kubernetes_prime | bool
+      and
+    not nfc_role_kubernetes_master | bool

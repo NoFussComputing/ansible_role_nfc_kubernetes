@@ -3,7 +3,7 @@ title: RBAC
 description: No Fuss Computings Ansible role nfc_kubernetes RBAC documentation.
 date: 2023-10-29
 template: project.html
-about: https://gitlab.com/nofusscomputing/projects/ansible/roles/kubernetes
+about: https://gitlab.com/nofusscomputing/projects/ansible/collections/kubernetes
 ---
 
 As part of this roles workflow, A set of Clester Roles and Cluster Bindings are deployed and ready to use. The intent of these roles is to create a default set of roles that only require the authorization system to provide the users groups. As they have been defined as Cluster Roles you can bind to both cluster and/or namespace.  

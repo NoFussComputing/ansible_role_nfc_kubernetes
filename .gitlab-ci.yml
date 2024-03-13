@@ -1,24 +1,34 @@
 ---
+
+variables:
+  ANSIBLE_GALAXY_PACKAGE_NAME: phpipam_scan_agent
+  MY_PROJECT_ID: "51640029"
+  GIT_SYNC_URL: "https://$GITHUB_USERNAME_ROBOT:$GITHUB_TOKEN_ROBOT@github.com/NoFussComputing/ansible_collection_kubernetes.git"
+  PAGES_ENVIRONMENT_PATH: projects/ansible/collection/kubernetes/
+  RELEASE_ADDITIONAL_ACTIONS_BUMP: ./.gitlab/additional_actions_bump.sh
+
+
 include:
   - project: nofusscomputing/projects/gitlab-ci
     ref: development
     file:
       - .gitlab-ci_common.yaml
-      - template/automagic.gitlab-ci.yaml
+      - conventional_commits/.gitlab-ci.yml
+      - template/ansible-collection.gitlab-ci.yaml
+      - template/mkdocs-documentation.gitlab-ci.yaml
+      # ToDo: update gitlabCI jobs for collections workflow
+      - git_push_mirror/.gitlab-ci.yml
+      - automation/.gitlab-ci-ansible.yaml
 
-variables:
-  MY_PROJECT_ID: "51640029"
-  GIT_SYNC_URL: "https://$GITHUB_USERNAME_ROBOT:$GITHUB_TOKEN_ROBOT@github.com/NoFussComputing/ansible_role_nfc_kubernetes.git"
-  PAGES_ENVIRONMENT_PATH: projects/ansible/roles/kubernetes/
+
+Update Git Submodules:
+  extends: .ansible_playbook_git_submodule
 
 
-Ansible-roles.Submodule.Deploy:
-  extends: .submodule_update_trigger
-  variables:
-    SUBMODULE_UPDATE_TRIGGER_PROJECT: nofusscomputing/projects/ansible/ansible-roles
-    GIT_COMMIT_TYPE: feat
-    GIT_COMMIT_TYPE_CATEGORY: $CI_PROJECT_NAME
-    GIT_CONFIG_SUBMODULE_NAME: nfc_kubernetes
+Github (Push --mirror):
+  extends:
+    - .git_push_mirror
+  needs: []
 
 
 Website.Submodule.Deploy:

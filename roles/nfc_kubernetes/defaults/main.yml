@@ -49,9 +49,9 @@ nfc_role_kubernetes_oidc_enabled: false
 nfc_role_kubernetes_pod_subnet: 172.16.248.0/21
 nfc_role_kubernetes_service_subnet: 172.16.244.0/22
 
-nfc_role_kubernetes_prime: true
-nfc_role_kubernetes_master: true
-nfc_role_kubernetes_worker: false
+nfc_role_kubernetes_prime: true                         # Mandatory for a node designated as the prime master node
+nfc_role_kubernetes_master: true                        # Mandatory for a node designated as a master node and the prime master node
+nfc_role_kubernetes_worker: false                       # Mandatory for a node designated as a worker node
 
 ############################################################################################################
 #
@@ -82,7 +82,7 @@ kubelet_arg_system_reserved_storage: 8Gi
 
 
 nfc_kubernetes:
-  enable_firewall: true             # Optional, bool enable firewall rules from role 'nfc_firewall'
+  enable_firewall: false             # Optional, bool enable firewall rules from role 'nfc_firewall'
 
 nfc_kubernetes_no_restart: false         # Set to true to prevent role from restarting kubernetes on the host(s)
 nfc_kubernetes_no_restart_master: false  # Set to true to prevent role from restarting kubernetes on master host(s)
