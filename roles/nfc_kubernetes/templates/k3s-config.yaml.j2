@@ -7,7 +7,7 @@
 #
 
 {%- if 
-  inventory_hostname in groups['kubernetes_master']
+  nfc_role_kubernetes_master
     or
   kubernetes_config.cluster.prime.name | default(inventory_hostname) == inventory_hostname
 -%}
@@ -128,6 +128,16 @@
 
 {# SoF All Nodes #}
 
+{%- if inventory_hostname == 'localhost' -%}
+
+  {%- set node_name = hostname_to_check.stdout -%}
+
+{%- else -%}
+
+  {%- set node_name = inventory_hostnamet -%}
+
+{%- endif -%}
+
 {%
 
   set all_nodes_config = {
@@ -135,7 +145,7 @@
       "system-reserved=cpu=" + kubelet_arg_system_reserved_cpu  + ",memory=" + kubelet_arg_system_reserved_memory + 
       ",ephemeral-storage=" + kubelet_arg_system_reserved_storage
     ],
-    "node-name": inventory_hostname,
+    "node-name": node_name,
   }
 
 -%}
@@ -149,7 +159,7 @@
 
     {%- for cluster_node in groups[kubernetes_config.cluster.group_name] -%}
 
-      {%- if cluster_node in groups['kubernetes_master'] -%}
+      {%- if cluster_node in groups['kubernetes_master'] | default([]) -%}
 
         {%- if hostvars[cluster_node].host_external_ip is defined -%}
 
@@ -228,7 +238,7 @@
 
 
 {%- if 
-  inventory_hostname in groups['kubernetes_master']
+  nfc_role_kubernetes_master
     or
   kubernetes_config.cluster.prime.name | default(inventory_hostname) == inventory_hostname
 -%}

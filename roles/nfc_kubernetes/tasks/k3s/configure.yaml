@@ -39,7 +39,16 @@
       - src: iptables-kubernetes.rules.j2
         dest: "/etc/iptables.rules.d/iptables-kubernetes.rules"
         notify: firewall_reloader
-        when: "{{ firewall_rules_dir_metadata.stat.exists }}"
+        when: |-
+          {%- if nfc_kubernetes.enable_firewall -%}
+
+            {{ firewall_rules_dir_metadata.stat.exists }}
+
+          {%- else -%}
+
+            false
+
+          {%- endif %}
 
 
 - name: Add Kubernetes Node Labels

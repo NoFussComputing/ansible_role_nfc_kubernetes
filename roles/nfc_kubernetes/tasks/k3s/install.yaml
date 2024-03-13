@@ -21,10 +21,10 @@
     loop_var: package
   vars:
     packages:
-      - name: curl
-      - name: iptables
-      - name: jq
-      - name: wireguard
+      - curl
+      - iptables
+      - jq
+      - wireguard
 
 
 - name: Remove swapfile from /etc/fstab
