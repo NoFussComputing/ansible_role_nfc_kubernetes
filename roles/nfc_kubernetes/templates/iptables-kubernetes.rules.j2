@@ -61,7 +61,7 @@
 
   {%- if kubernetes_host != '' -%}
 
-    {%- for master_host in groups['kubernetes_master'] -%}
+    {%- for master_host in groups['kubernetes_master'] | default([]) -%}
 
       {%- if master_host in groups[kubernetes_config.cluster.group_name | default('me_is_optional')] | default([]) -%}
 
