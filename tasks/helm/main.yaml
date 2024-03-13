@@ -1,0 +1,27 @@
+---
+
+- name: Fetch Helm APT Key
+  ansible.builtin.get_url:
+    url: https://baltocdn.com/helm/signing.asc
+    dest: /usr/share/keyrings/helm.asc
+    mode: 740
+
+
+- name: Add Helm Repository
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={%- if ansible_architecture == 'aarch64' -%}
+        arm64
+      {%- else -%}
+        amd64
+      {%- endif %} signed-by=/usr/share/keyrings/helm.asc] http://baltocdn.com/helm/stable/{{
+      ansible_os_family | lower }}/ all main
+    state: present
+    filename: helm
+
+
+- name: Install Helm
+  ansible.builtin.apt:
+    package:
+      - helm
+    state: present

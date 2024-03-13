@@ -96,7 +96,7 @@
     - name: Fetch Calico Kubectl Plugin
       ansible.builtin.uri:
         url: |-
-          https://github.com/projectcalico/calico/releases/download/{{ nfc_kubernetes_calico_version }}/calicoctl-linux-
+          https://github.com/projectcalico/calico/releases/download/{{ nfc_role_kubernetes_calico_version }}/calicoctl-linux-
           {%- if cpu_arch.key == 'aarch64' -%}
             arm64
           {%- else -%}
@@ -127,7 +127,7 @@
         owner: root
         group: 'root'
       become: true
-      when: inventory_hostname in groups['kubernetes_master']
+      when: nfc_role_kubernetes_master
 
 
     - name: Setup Automagic Host Endpoints
@@ -150,10 +150,10 @@
             projectcalico.org/operator-node-migration-
         executable: bash
       become: true
-      delegate_to: "{{ kubernetes_config.cluster.prime.name }}"
+      delegate_to: "{{ kubernetes_config.cluster.prime.name | default(inventory_hostname) }}"
       changed_when: false
       failed_when: false
-      loop: "{{ groups[kubernetes_config.cluster.group_name] }}"
+      loop: "{{ groups[kubernetes_config.cluster.group_name | default('make_me_optional')] | default([]) }}"
 
     # kubectl label node ip-10-229-92-202.eu-west-1.compute.internal projectcalico.org/operator-node-migration-
     # migration started

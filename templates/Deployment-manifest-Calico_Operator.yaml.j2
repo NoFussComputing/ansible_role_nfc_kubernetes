@@ -25272,7 +25272,10 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       containers:
         - name: tigera-operator
-          image: {{ nfc_kubernetes_tigera_operator_registry }}/{{ nfc_kubernetes_tigera_operator_image}}:{{ nfc_kubernetes_tigera_operator_tag }}
+          image: {{ 
+            nfc_role_kubernetes_container_images.tigera_operator.registry }}/{{ 
+              nfc_role_kubernetes_container_images.tigera_operator.image}}:{{ 
+                nfc_role_kubernetes_container_images.tigera_operator.tag }}
           imagePullPolicy: IfNotPresent
           command:
             - operator
@@ -25290,7 +25293,7 @@ spec:
             - name: OPERATOR_NAME
               value: "tigera-operator"
             - name: TIGERA_OPERATOR_INIT_IMAGE_VERSION
-              value: {{ nfc_kubernetes_tigera_operator_tag }}
+              value: {{ nfc_role_kubernetes_container_images.tigera_operator.tag }}
           envFrom:
             - configMapRef:
                 name: kubernetes-services-endpoint

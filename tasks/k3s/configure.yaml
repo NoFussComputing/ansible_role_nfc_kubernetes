@@ -12,6 +12,12 @@
   when: item.when | default(false) | bool
 
 
+- name: Check if FW dir exists
+  ansible.builtin.stat:
+    name: /etc/iptables.rules.d
+  register: firewall_rules_dir_metadata
+
+
 - name: Copy Templates
   ansible.builtin.template:
     src: "{{ item.src }}"
@@ -28,11 +34,12 @@
 
       - src: kubernetes-manifest-rbac.yaml.j2
         dest: /var/lib/rancher/k3s/server/manifests/rbac-authorization-common.yaml
-        when: "{{ kubernetes_config.cluster.prime.name == inventory_hostname }}"
+        when: "{{ kubernetes_config.cluster.prime.name | default(inventory_hostname) == inventory_hostname }}"
 
       - src: iptables-kubernetes.rules.j2
         dest: "/etc/iptables.rules.d/iptables-kubernetes.rules"
         notify: firewall_reloader
+        when: "{{ firewall_rules_dir_metadata.stat.exists }}"
 
 
 - name: Add Kubernetes Node Labels

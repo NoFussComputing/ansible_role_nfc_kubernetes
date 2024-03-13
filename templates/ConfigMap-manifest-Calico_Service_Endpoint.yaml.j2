@@ -6,6 +6,6 @@ metadata:
   namespace: tigera-operator
 data:
   KUBERNETES_SERVICE_HOST: "
-    {%- set octet = kubernetes_config.cluster.networking.ServiceSubnet | split('.') -%}
+    {%- set octet = kubernetes_config.cluster.networking.ServiceSubnet | default(nfc_role_kubernetes_service_subnet) | split('.') -%}
     {{- octet[0] }}.{{- octet[1] }}.{{- octet[2] }}.1"
   KUBERNETES_SERVICE_PORT: '443'

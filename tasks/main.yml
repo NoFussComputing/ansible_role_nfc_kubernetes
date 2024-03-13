@@ -1,5 +1,24 @@
 ---
 
+- name: Get Hostname
+  ansible.builtin.command:
+    cmd: hostname
+  changed_when: false
+  register: hostname_to_check
+
+
+- name: Hostname Check
+  ansible.builtin.assert:
+    that:
+      - hostname_to_check.stdout == inventory_hostname
+    msg: The hostname must match the inventory_hostname
+
+
+- name: Check Machine Architecture
+  ansible.builtin.set_fact:
+    nfc_kubernetes_install_architectures: "{{ nfc_kubernetes_install_architectures | default({}) | combine({ansible_architecture: ''}) }}"
+
+
 - name: Firewall Rules
   ansible.builtin.include_role:
     name: nfc_firewall
@@ -20,19 +39,63 @@
     - install
 
 
-- name: K8s Cluster
-  ansible.builtin.include_tasks: k8s.yaml
-  when: kubernetes_type == 'k8s'
+# kubernetes_installed
+
+- name: K3s Install
+  ansible.builtin.include_tasks:
+    file: k3s/install.yaml
+    apply:
+      tags:
+        - always
+  when: >
+    install_kubernetes | default(true) | bool
+      and
+    not kubernetes_installed | default(false) | bool
   tags:
-    - never
-    - install
+    - always
 
 
-- name: K3s Cluster
-  ansible.builtin.include_tasks: k3s.yaml
-  when: kubernetes_type == 'k3s'
+- name: K3s Configure
+  ansible.builtin.include_tasks:
+    file: k3s/configure.yaml
+    apply:
+      tags:
+        - always
+  when: >
+    install_kubernetes | default(true) | bool
+      and
+    kubernetes_installed | default(false) | bool
   tags:
-    - never
-    - install
-    - operator_calico
-    - operator_migrate_calico
+    - always
+
+
+- name: Kubevert
+  ansible.builtin.include_tasks:
+    file: kubevirt/main.yaml
+    apply:
+      tags:
+        - always
+  when: >
+    kubernetes_installed | default(false) | bool
+      and
+    kubernetes_config.kube_virt.enabled | default(nfc_role_kubernetes_install_kubevirt)
+      and
+    inventory_hostname in kubernetes_config.kube_virt.nodes | default([ inventory_hostname ]) | list
+  tags:
+    - always
+
+
+- name: Helm
+  ansible.builtin.include_tasks:
+    file: helm/main.yaml
+    apply:
+      tags:
+        - always
+  when: >
+    kubernetes_installed | default(false) | bool
+      and
+    kubernetes_config.helm.enabled | default(nfc_role_kubernetes_install_helm)
+      and
+    nfc_role_kubernetes_master
+  tags:
+    - always

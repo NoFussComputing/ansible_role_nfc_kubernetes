@@ -6,20 +6,37 @@ template: project.html
 about: https://gitlab.com/nofusscomputing/projects/ansible/roles/kubernetes
 ---
 
-This Ansible role is designed to deploy a K3s Kubernetes cluster. After adding your configuration, the cluster will deploy and have a configured CNI (calico) and be in a state ready to use. This role can be used with our [our playbooks](../../playbooks/index.md) or comes included, along with the playbook within our [Ansible Execution Environment](../../execution_environment/index.md).
+This Ansible role is designed to deploy a K3s Kubernetes cluster. Without adding cluster configuration this role will install K3s as a single node cluster. To deploy a multi-node cluster add your configuration, K3s will be installed on all nodes. On completion you will have fully configured cluster in a state ready to use. This role can be used with our [our playbooks](../../playbooks/index.md) or comes included, along with the playbook within our [Ansible Execution Environment](../../execution_environment/index.md).
+
+
+## Role Details
+
+| Item| Value | Description |
+|:---|:---:|:---|
+| Dependent Roles | _None_ | |
+| Optional Roles | _nfc_firewall_ | Used to setup the firewall for kubernetes. |
+| Idempotent | _Yes_ |  |
+| Stats Available | _Not Yet_ |  |
+| Tags | _Nil_ |  |
+| Requirements | _Gather Facts_  |  |
+|   | _become_ |  |
 
 
 ## Features
 
-- CNI Setup
+- CNI Setup, calico including `calicoctl` plugin
+
+    > `kubectl calico ....` instead of `calicoctl ....`
 
 - Configurable:
 
     - Container Registries
 
-    - etcd snapshot cron schedule
+    - ectd deployment
+    
+        - etcd snapshot cron schedule
 
-    - etcd snapshot retention
+        - etcd snapshot retention
     
     - Cluster Domain
 
@@ -47,6 +64,12 @@ This Ansible role is designed to deploy a K3s Kubernetes cluster. After adding y
 
 - Install MetalLB
 
+- Install KubeVirt including `virtctl` plugin
+
+    > `kubectl virt ....` instead of `virtctl ....`
+
+- Install the Helm Binary
+
 
 ## Role Workflow
 
@@ -66,6 +89,8 @@ For a more probable than not success this role first installs/configures prime m
 
 1. Configure Kubernetes
 
+1. Install Kubevirt
+
 If the playbook is setup as per [our recommendation](ansible.md) step 2 onwards is first done on master nodes then worker nodes.
 
 !!! tip
@@ -78,6 +103,7 @@ If the playbook is setup as per [our recommendation](ansible.md) step 2 onwards 
     nfc_kubernetes_no_restart_slave: false
     ```
     _See default variables below for explanation of each variable if it's not evident enough._
+
 
 ## Default Variables
 

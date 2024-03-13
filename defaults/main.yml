@@ -6,10 +6,10 @@
 calico_image_tag: v3.25.0 # Depreciated
 # EoF Depreciated
 # SoF New Variables
-nfc_kubernetes_calico_version: v3.27.0
-nfc_kubernetes_tigera_operator_registry: quay.io
-nfc_kubernetes_tigera_operator_image: tigera/operator
-nfc_kubernetes_tigera_operator_tag: v1.32.3               # Calico v3.27.0
+nfc_role_kubernetes_calico_version: v3.27.0
+# nfc_kubernetes_tigera_operator_registry: quay.io
+# nfc_kubernetes_tigera_operator_image: tigera/operator
+# nfc_kubernetes_tigera_operator_tag: v1.32.3               # Calico v3.27.0
 # EoF New Variables, EEoF Depreciated
 
 
@@ -17,26 +17,54 @@ nfc_kubernetes_enable_metallb: false
 nfc_kubernetes_enable_servicelb: false
 
 
+nfc_role_kubernetes_container_images:
+
+  kubevirt_operator:
+    name: Kubevirt Operator
+    registry: quay.io
+    image: kubevirt/virt-operator
+    tag: v1.2.0
+
+  tigera_operator:
+    name: Tigera Operator
+    registry: quay.io
+    image: tigera/operator
+    tag: v1.32.3    # Calico v3.27.0
+
+
+nfc_role_kubernetes_cluster_domain: cluster.local
+
+nfc_role_kubernetes_etcd_enabled: false
+
+nfc_role_kubernetes_install_olm: false
+
+nfc_role_kubernetes_install_helm: true
+
+nfc_role_kubernetes_install_kubevirt: false
+
+nfc_role_kubernetes_kubevirt_operator_replicas: 1
+
+nfc_role_kubernetes_oidc_enabled: false
+
+nfc_role_kubernetes_pod_subnet: 172.16.248.0/21
+nfc_role_kubernetes_service_subnet: 172.16.244.0/22
+
+nfc_role_kubernetes_prime: true
+nfc_role_kubernetes_master: true
+nfc_role_kubernetes_worker: false
+
 ############################################################################################################
 #
 #                     Old Vars requiring refactoring
 #
 # ############################################################################################################
-# KubernetesPodSubnet: 10.85.0.0/16
-# KubernetesServiceSubnet: 10.86.0.0/16
 
 
-Kubernetes_Prime: false                                    # Optional, Boolean. Is the current host the Prime master?
-Kubernetes_Master: false                                   # Optional, Boolean. Is the current host a master host?
-
-ContainerDioVersion: 1.6.20-1
-KubernetesVersion: '1.26.2'                                # must match the repository release version
-kubernetes_version_olm: '0.26.0'
+KubernetesVersion: '1.26.12'                                # must match the repository release version
+kubernetes_version_olm: '0.27.0'
 
 
 
-
-KubernetesVersion_k8s_prefix: '-00'
 KubernetesVersion_k3s_prefix: '+k3s1'
 
 kubernetes_private_container_registry: []                  # Optional, Array. if none use `[]`
@@ -46,15 +74,11 @@ kubernetes_etcd_snapshot_retention: 5
 
 # host_external_ip: ''                                     # Optional, String. External IP Address for host.
 
-kubernetes_type: k8s                                       # Mandatory, String. choice K8s | k3s
-
 kube_apiserver_arg_audit_log_maxage: 2
 
 kubelet_arg_system_reserved_cpu: 450m
 kubelet_arg_system_reserved_memory: 512Mi
 kubelet_arg_system_reserved_storage: 8Gi
-
-# kubernetes_olm_install: true # optional, boolean. default=true
 
 
 nfc_kubernetes:
@@ -76,7 +100,7 @@ k3s:
         kind: Policy
         rules:
         - level: Request
-      when: "{{ Kubernetes_Master | default(false) }}"
+      when: "{{ nfc_role_kubernetes_master }}"
 
     - name: 90-kubelet.conf
       path: /etc/sysctl.d
@@ -108,7 +132,7 @@ k3s:
         #       usernames: []
         #       runtimeClasses: []
         #       namespaces: [kube-system]
-      when: "{{ kubernetes_config.cluster.prime.name == inventory_hostname }}"
+      when: "{{ kubernetes_config.cluster.prime.name | default(inventory_hostname) == inventory_hostname }}"
 
 
 #############################################################################################
@@ -123,7 +147,7 @@ k3s:
 #       - 'my.dnshostname.com'
 #       - '2001:4860:4860::8888'
 #       - '192.168.1.1'
-#     Name: earth                       # Mandatory, String. Cluster Name
+#     domain_name: earth                # Mandatory, String. Cluster Domain Name
 #     group_name:                       # Mandatory, String. name of the ansible inventory group containg all cluster hosts
 #     prime:
 #       name: k3s-prod                  # Mandatory, String. Ansible inventory_host that will
@@ -132,10 +156,21 @@ k3s:
 #       encrypt: true                   # Optional, Boolean. default `false`. Install wireguard for inter-node encryption
 #       podSubnet: 172.16.70.0/24       # Mandatory, String. CIDR
 #       ServiceSubnet: 172.16.72.0/24   # Mandatory, String. CIDR
-#                                       # Mandatory, String. Token to join nodes to the cluster
-#   node_token: !vault |
-#     $ANSIBLE_VAULT;1.2;AES256;kubernetes/cluster/production
-#     {rest_of encrypted key}
+#
+#
+#  helm:
+#    enabled: true       # Optional, Boolean. default=false. Install Helm Binary
+#
+#
+#  kube_virt:
+#    enabled: false      # Optional, Boolean. default=false. Install KubeVirt
+#
+#    nodes: []           # Optional, List of String. default=inventory_hostname. List of nodes to install kibevirt on.
+#
+#    operator:
+#      replicas: 2       # Optional, Integer. How many virt_operators to deploy.
+#
+#
 #  oidc:                                                    # Used to configure Kubernetes with OIDC Authentication.
 #    enabled: true                                          # Mandatory, boolen. speaks for itself.
 #    issuer_url: https://domainname.com/realms/realm-name   # Mandatory, String. URL of OIDC Provider
@@ -144,14 +179,14 @@ k3s:
 #    username_prefix: oidc                                  # Optional, String. What to prefix to username
 #    groups_claim: roles                                    # Mandatory, String. Claim name containing groups
 #    groups_prefix: ''                                      # Optional, String. string to append to groups
-
-#     hosts: 
-
-#       my-host-name:
-#         labels:
-#           mylabel: myvalue
-
-#         taints:
-#           - effect: NoSchedule
-#             key: taintkey
-#             value: taintvalue
+#
+#   hosts:
+#
+#     my-host-name:
+#       labels:
+#         mylabel: myvalue
+#
+#       taints:
+#         - effect: NoSchedule
+#           key: taintkey
+#           value: taintvalue

@@ -25,7 +25,7 @@ There are many ways to layout your inventory within Ansible. To take full advant
     !!! info Info
         The nfc_kubernetes role uses this field for any configuration that requires a hostname. You are strongly encouraged to use DNS name and the DNS name be resolveable for each host accessing to the host in question. Using DNS host name is of paramount importance for a host with dynamic DHCP being used.
 
-- variable `Kubernetes_Master` _boolean_ set for all host that are master nodes.
+- variable `nfc_role_kubernetes_master` _boolean_ set for all host that are master nodes.
 
 - hosts that require Kubernetes API access added to variable `kubernetes_config.cluster.access`
 
