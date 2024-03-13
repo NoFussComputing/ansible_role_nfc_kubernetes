@@ -12,6 +12,8 @@
     that:
       - hostname_to_check.stdout == inventory_hostname
     msg: The hostname must match the inventory_hostname
+  when: >
+    inventory_hostname != 'localhost'
 
 
 - name: Check Machine Architecture
