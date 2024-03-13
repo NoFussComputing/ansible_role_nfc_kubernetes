@@ -3,7 +3,7 @@ title: Release Notes
 description: No Fuss Computings Ansible role nfc_kubernetes
 date: 2024-01-31
 template: project.html
-about: https://gitlab.com/nofusscomputing/projects/ansible/roles/kubernetes
+about: https://gitlab.com/nofusscomputing/projects/ansible/collections/kubernetes
 ---
 
 This document details any changes that have occured that may impact users of this role. It's a rolling document and will be amended from time to time.

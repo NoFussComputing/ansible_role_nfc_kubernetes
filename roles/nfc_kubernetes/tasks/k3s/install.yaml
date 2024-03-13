@@ -12,13 +12,15 @@
   register: file_calico_operator_yaml_metadata
 
 
-- name: Install Software
-  ansible.builtin.include_role:
-    name: nfc_common
+- name: Install dependent packages
+  ansible.builtin.apt:
+    name: "{{ package }}"
+    state: present
+  loop: "{{ packages }}"
+  loop_control:
+    loop_var: package
   vars:
-    common_gather_facts: false
-    initial_common_tasks: true # Don't run init tasks
-    aptInstall:
+    packages:
       - name: curl
       - name: iptables
       - name: jq

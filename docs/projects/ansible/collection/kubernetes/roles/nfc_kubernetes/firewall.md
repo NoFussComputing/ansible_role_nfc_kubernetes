@@ -3,7 +3,7 @@ title: Firewall
 description: No Fuss Computings Ansible role nfc_kubernetes
 date: 2023-10-24
 template: project.html
-about: https://gitlab.com/nofusscomputing/projects/ansible/roles/kubernetes
+about: https://gitlab.com/nofusscomputing/projects/ansible/collections/kubernetes
 ---
 
 This role include logic to generate firewall rules for iptables. Both IPv4 and IPv6 rules are generated. to survive reboots or network cable disconects, a script is created and added to the `if-up.d.` This enables that each time the interface is brought up, the firewall rules are applied. For a list of the firewall rules applied see the [K3s documentation](https://docs.k3s.io/installation/requirements#inbound-rules-for-k3s-server-nodes)

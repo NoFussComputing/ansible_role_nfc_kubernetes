@@ -15,10 +15,10 @@ Some components within this role are sourced from a remote source. To update the
 
 export KUBEVIRT_RELEASE='<kubevirt release i.e. v1.2.0>'
 
-# From within the templates directory
+# From within roles/nfc_kubernetes/templates directory
 wget https://github.com/kubevirt/kubevirt/releases/download/${KUBEVIRT_RELEASE}/kubevirt-operator.yaml -O kubevirt-operator.yaml.j2
 
-# From within the templates directory
+# From within the roles/nfc_kubernetes/templates directory
 wget https://github.com/kubevirt/kubevirt/releases/download/${KUBEVIRT_RELEASE}/kubevirt-cr.yaml -O kubevirt-cr.yaml.j2
 
 ```

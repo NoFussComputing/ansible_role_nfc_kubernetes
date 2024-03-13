@@ -2,9 +2,9 @@ INHERIT: website-template/mkdocs.yml
 
 docs_dir: 'docs'
 
-repo_name: Kubernetes Ansible Role
-repo_url: https://gitlab.com/nofusscomputing/projects/ansible/kubernetes
-edit_uri: '/-/ide/project/nofusscomputing/projects/ansible/kubernetes/edit/development/-/docs/'
+repo_name: Kubernetes Ansible Collection
+repo_url: https://gitlab.com/nofusscomputing/projects/ansible/collections/kubernetes
+edit_uri: '/-/ide/project/nofusscomputing/projects/ansible/collections/kubernetes/edit/development/-/docs/'
 
 nav:
 - Home: index.md
@@ -29,21 +29,25 @@ nav:
 
       - projects/ansible/playbooks/index.md
 
-    - Roles:
+    - Collections:
 
-      - projects/ansible/roles/index.md
+      - projects/ansible/collection/index.md
 
       - Kubernetes:
 
-        - projects/ansible/roles/kubernetes/index.md
+        - projects/ansible/collection/kubernetes/index.md
 
-        - projects/ansible/roles/kubernetes/ansible.md
+        - Role nfc_kubernetes:
 
-        - projects/ansible/roles/kubernetes/firewall.md
+          - projects/ansible/collection/kubernetes/roles/nfc_kubernetes/index.md
 
-        - projects/ansible/roles/kubernetes/rbac.md
+          - projects/ansible/collection/kubernetes/roles/nfc_kubernetes/ansible.md
 
-        - projects/ansible/roles/kubernetes/release_notes.md
+          - projects/ansible/collection/kubernetes/roles/nfc_kubernetes/firewall.md
+
+          - projects/ansible/collection/kubernetes/roles/nfc_kubernetes/rbac.md
+
+          - projects/ansible/collection/kubernetes/roles/nfc_kubernetes/release_notes.md
 
 
 - Operations: 

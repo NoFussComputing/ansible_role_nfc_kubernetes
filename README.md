@@ -1,11 +1,16 @@
-<div align="center" width="100%">
+<span style="text-align: center;">
 
-
-# No Fuss Computing - Ansible Role: nfc_kubernetes
+# No Fuss Computing - Ansible Collection Kubernetes
 
 <br>
 
 ![Project Status - Active](https://img.shields.io/badge/Project%20Status-Active-green?logo=gitlab&style=plastic) 
+
+
+[![Downloads](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgalaxy.ansible.com%2Fapi%2Fv3%2Fplugin%2Fansible%2Fcontent%2Fpublished%2Fcollections%2Findex%2Fnofusscomputing%2Fkubernetes%2F&query=%24.download_count&style=plastic&logo=ansible&logoColor=white&label=Galaxy%20Downloads&labelColor=black&color=cyan)](https://galaxy.ansible.com/ui/repo/published/nofusscomputing/kubernetes/)
+
+
+----
 
 <br>
 
@@ -13,10 +18,10 @@
 
 
 
-![GitHub forks](https://img.shields.io/github/forks/NofussComputing/ansible_role_nfc_kubernetes?logo=github&style=plastic&color=000000&labell=Forks) ![GitHub stars](https://img.shields.io/github/stars/NofussComputing/ansible_role_nfc_kubernetes?color=000000&logo=github&style=plastic) ![Github Watchers](https://img.shields.io/github/watchers/NofussComputing/ansible_role_nfc_kubernetes?color=000000&label=Watchers&logo=github&style=plastic)
+![GitHub forks](https://img.shields.io/github/forks/NofussComputing/ansible_collection_kubernetes?logo=github&style=plastic&color=000000&labell=Forks) ![GitHub stars](https://img.shields.io/github/stars/NofussComputing/ansible_collection_kubernetes?color=000000&logo=github&style=plastic) ![Github Watchers](https://img.shields.io/github/watchers/NofussComputing/ansible_collection_kubernetes?color=000000&label=Watchers&logo=github&style=plastic)
 <br>
 
-This project is hosted on [gitlab](https://gitlab.com/nofusscomputing/projects/ansible/kubernetes) and has a read-only copy hosted on [Github](https://github.com/NofussComputing/ansible_role_nfc_kubernetes).
+This project is hosted on [gitlab](https://gitlab.com/nofusscomputing/projects/ansible/kubernetes) and has a read-only copy hosted on [Github](https://github.com/NofussComputing/ansible_collection_kubernetes).
 
 ----
 

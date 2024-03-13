@@ -3,7 +3,7 @@ title: Ansible
 description: No Fuss Computings Ansible role nfc_kubernetes Ansible docs
 date: 2023-10-24
 template: project.html
-about: https://gitlab.com/nofusscomputing/projects/ansible/roles/kubernetes
+about: https://gitlab.com/nofusscomputing/projects/ansible/collections/kubernetes
 ---
 
 This page intends to describe/explain the setup of ansible for this role. 
