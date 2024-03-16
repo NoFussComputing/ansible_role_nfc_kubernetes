@@ -19,7 +19,7 @@ about: https://gitlab.com/nofusscomputing/projects/ansible/collections/kubernete
 
 </span>
 
-This Ansible Collection is for installing a K3s Kubernetes cluster, both single and multi-node cluster deployments are supported.
+This Ansible Collection is for installing a K3s Kubernetes cluster, both single and multi-node cluster deployments are supported. In addition to installing and configuring the firewall for the node. for further information on the firewall config please see the [firewall docs](../firewall/index.md)
 
 
 ## Installation

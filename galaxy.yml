@@ -46,6 +46,7 @@ tags:
 dependencies:
   ansible.posix: '1.5.4'
   kubernetes.core: '3.0.0'
+  nofusscomputing.firewall: '1.0.1'
 
 
 # The URL of the originating SCM repository

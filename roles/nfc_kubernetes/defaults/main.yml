@@ -34,6 +34,8 @@ nfc_role_kubernetes_container_images:
 
 nfc_role_kubernetes_cluster_domain: cluster.local
 
+nfc_role_kubernetes_configure_firewall: true
+
 nfc_role_kubernetes_etcd_enabled: false
 
 nfc_role_kubernetes_install_olm: false
