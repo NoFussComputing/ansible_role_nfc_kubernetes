@@ -1,0 +1,90 @@
+---
+
+kubernetes_chains:
+
+  - name: kubernetes-embedded-etcd
+    chain: true
+    table: INPUT
+    protocol: tcp
+    dest:
+      port:
+        - '2379'
+        - '2380'
+    comment: etcd. Servers only
+    when: "{{ nfc_role_kubernetes_etcd_enabled }}"
+
+  - name: kubernetes-api
+    chain: true
+    table: INPUT
+    protocol: tcp
+    dest:
+      port: '6443'
+    comment: Kubernetes API access. All Cluster hosts and end users
+
+  - name: kubernetes-calico-bgp
+    chain: true
+    table: INPUT
+    protocol: tcp
+    dest:
+      port: '179'
+    comment: Kubernetes Calico BGP. All Cluster hosts and end users
+    when: false    # currently hard set to false. see Installation-manifest-Calico_Cluster.yaml.j2
+
+  - name: kubernetes-flannel-vxlan
+    chain: true
+    table: INPUT
+    protocol: udp
+    dest:
+      port: '4789'
+    comment: Flannel. All cluster hosts
+
+  - name: kubernetes-kubelet-metrics
+    chain: true
+    table: INPUT
+    protocol: tcp
+    dest:
+      port: '10250'
+    comment: Kubernetes Metrics. All cluster hosts
+
+  - name: kubernetes-flannel-wg-four
+    chain: true
+    table: INPUT
+    protocol: udp
+    dest:
+      port: '51820'
+    comment: Flannel Wiregaurd IPv4. All cluster hosts
+
+  - name: kubernetes-flannel-wg-six
+    chain: true
+    table: INPUT
+    protocol: udp
+    dest:
+      port: '51821'
+    comment: Flannel Wiregaurd IPv6. All cluster hosts
+    when: false    # ipv6 is disabled. see install.yaml sysctrl
+
+  - name: kubernetes-calico-typha
+    chain: true
+    table: INPUT
+    protocol: tcp
+    dest:
+      port: '5473'
+    comment: Calico networking with Typha enabled. Typha agent hosts.
+
+  - name: metallb-l2-tcp
+    chain: true
+    table: INPUT
+    protocol: tcp
+    dest:
+      port: '7946'
+    comment: MetalLB Gossip
+    when: "{{ nfc_kubernetes_enable_metallb }}"
+
+  - name: metallb-l2-udp
+    chain: true
+    table: INPUT
+    protocol: udp
+    dest:
+      port: '7946'
+    comment: MetalLB Gossip
+    when: "{{ nfc_kubernetes_enable_metallb }}"

@@ -10,7 +10,7 @@ This role include logic to generate firewall rules for iptables. Both IPv4 and I
 
 Rules generation workflow:
 
-- itertes over all kubernetes hosts
+- iterates over all kubernetes hosts
 
 - adds rules if host is masters for worker access
 

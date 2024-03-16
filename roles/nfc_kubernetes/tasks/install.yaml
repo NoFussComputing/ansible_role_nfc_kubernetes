@@ -21,27 +21,17 @@
     nfc_kubernetes_install_architectures: "{{ nfc_kubernetes_install_architectures | default({}) | combine({ansible_architecture: ''}) }}"
 
 
-- name: Firewall Rules
+- name: Configure Kubernetes Firewall Rules
   ansible.builtin.include_role:
-    name: nfc_firewall
+    name: nofusscomputing.firewall.nfc_firewall
   vars:
-    nfc_firewall_enabled_kubernetes: "{{ nfc_kubernetes.enable_firewall | default(false) | bool }}"
+    nfc_role_firewall_firewall_type: iptables
+    nfc_role_firewall_additional_rules: "{{ ( lookup('template', 'vars/firewall_rules.yaml') | from_yaml ).kubernetes_chains }}"
   tags:
-    - never
-    - install
+    - always
+  when: >
+    nfc_role_kubernetes_configure_firewall
 
-
-# fix, reload firewall `iptables-reloader`
-- name: Reload iptables
-  ansible.builtin.command:
-    cmd: bash -c /usr/bin/iptables-reloader
-  changed_when: false
-  tags:
-    - never
-    - install
-
-
-# kubernetes_installed
 
 - name: K3s Install
   ansible.builtin.include_tasks:

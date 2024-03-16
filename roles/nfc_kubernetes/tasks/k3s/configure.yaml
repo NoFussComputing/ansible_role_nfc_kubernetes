@@ -14,7 +14,7 @@
 
 - name: Check if FW dir exists
   ansible.builtin.stat:
-    name: /etc/iptables.rules.d
+    name: /etc/iptables-reloader/rules.d
   register: firewall_rules_dir_metadata
 
 
@@ -37,10 +37,10 @@
         when: "{{ kubernetes_config.cluster.prime.name | default(inventory_hostname) == inventory_hostname }}"
 
       - src: iptables-kubernetes.rules.j2
-        dest: "/etc/iptables.rules.d/iptables-kubernetes.rules"
+        dest: "/etc/iptables-reloader/rules.d/iptables-kubernetes.rules"
         notify: firewall_reloader
         when: |-
-          {%- if nfc_kubernetes.enable_firewall -%}
+          {%- if firewall_installed -%}
 
             {{ firewall_rules_dir_metadata.stat.exists }}
 
