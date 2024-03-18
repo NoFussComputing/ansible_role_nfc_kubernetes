@@ -46,6 +46,11 @@ ansible-playbook nofusscomputing.kubernetes.install
 
 ```
 
+!!! danger
+    By default when the install task is run, The firewall is also configured. The default sets the `FORWARD` and `INPUT` tables to have a policy of `DROP`. Failing to add any required additional rules before installing/configuring kubernetes will cause you to not have remote access to the machine. 
+    
+    You are encouraged to run `ansible-playbook nofusscomputing.firewall.install` with your rules configured within your inventory first. see the [firewall docs](../firewall/index.md) for more information.
+
 The install playbook has a dynamic `hosts` key. This has been done to specifically support running the playbook from AWX and being able to populate the field from the survey feature. Order of precedence for the host variable is as follows:
 
 - `nfc_pb_host` set to any valid value that a playbook `hosts` key can accept

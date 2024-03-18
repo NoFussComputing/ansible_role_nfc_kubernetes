@@ -149,8 +149,13 @@
 
       {#- All cluster Hosts -#}
 
-
-      {%- if nfc_role_kubernetes_master | default(false) | bool -%}
+      {%- if 
+        nfc_role_kubernetes_master | default(false) | bool
+          and
+        kubernetes_host not in groups['kubernetes_master']
+          and
+        '-I kubernetes-api -s ' + kubernetes_host + ' -j ACCEPT' not in data.firewall_rules
+      -%}
 
         {%- set data.firewall_rules = data.firewall_rules + ['-I kubernetes-api -s ' + kubernetes_host + ' -j ACCEPT'] -%}
 
@@ -162,9 +167,17 @@
 
       {%- set data.firewall_rules = data.firewall_rules + ['-I kubernetes-flannel-wg-four -s ' + kubernetes_host + ' -j ACCEPT'] -%}
 
-      {%- set data.firewall_rules = data.firewall_rules + ['-I kubernetes-flannel-wg-six -s ' + kubernetes_host + ' -j ACCEPT'] -%}
+      {%- if false -%}{# see IPv6 is disabled #}
+        
+        {%- set data.firewall_rules = data.firewall_rules + ['-I kubernetes-flannel-wg-six -s ' + kubernetes_host + ' -j ACCEPT'] -%}
+      
+      {%- endif -%}
 
-      {%- set data.firewall_rules = data.firewall_rules + ['-I kubernetes-calico-bgp -s ' + kubernetes_host + ' -j ACCEPT'] -%}
+      {%- if false -%}{# see Installation-manifest-Calico_Cluster.yaml.j2 bgp is disabled #}
+      
+        {%- set data.firewall_rules = data.firewall_rules + ['-I kubernetes-calico-bgp -s ' + kubernetes_host + ' -j ACCEPT'] -%}
+
+      {%- endif -%}
 
       {%- set data.firewall_rules = data.firewall_rules + ['-I kubernetes-calico-typha -s ' + kubernetes_host + ' -j ACCEPT'] -%}
 

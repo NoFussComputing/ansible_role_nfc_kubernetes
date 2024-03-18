@@ -9,6 +9,8 @@
     kubernetes_config.cluster.prime.name | default(inventory_hostname) == inventory_hostname
       and
     nfc_role_kubernetes_prime | bool
+      and
+    not kubernetes_installed | default(false)
 
 
 - name: Install/Configure Kubernetes on remaining Master Nodes
@@ -20,6 +22,8 @@
     kubernetes_config.cluster.prime.name | default(inventory_hostname) != inventory_hostname
       and
     nfc_role_kubernetes_master | bool
+      and
+    not kubernetes_installed | default(false)
 
 
 - name: Install/Configure Kubernetes on Worker Nodes
@@ -33,3 +37,5 @@
     not nfc_role_kubernetes_prime | bool
       and
     not nfc_role_kubernetes_master | bool
+      and
+    not kubernetes_installed | default(false)
