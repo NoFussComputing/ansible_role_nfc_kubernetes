@@ -1,5 +1,12 @@
 ---
 
+- name: Reboot Node
+  ansible.builtin.reboot:
+    reboot_timeout: 300
+  listen: reboot_host
+  when: ansible_connection == 'ssh'
+  
+
 - name: Restart Kubernetes
   ansible.builtin.service:
     name: |-
@@ -32,4 +39,3 @@
         nfc_kubernetes_no_restart_slave
       )
     )
-
