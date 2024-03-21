@@ -8,7 +8,7 @@ namespace: nofusscomputing
 name: kubernetes
 
 # The version of the collection. Must be compatible with semantic versioning
-version: 1.4.0
+version: 1.3.0
 
 # The path to the Markdown (.md) readme file. This path is relative to the root of the collection
 readme: README.md
@@ -46,7 +46,7 @@ tags:
 dependencies:
   ansible.posix: '1.5.4'
   kubernetes.core: '3.0.0'
-  nofusscomputing.firewall: '1.0.1'
+  nofusscomputing.firewall: '1.1.0'
 
 
 # The URL of the originating SCM repository
